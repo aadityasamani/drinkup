@@ -1,0 +1,21 @@
+[package]
+name = "drinkup"
+version = "0.1.0"
+description = "A friendly desktop buddy that reminds you to drink water"
+authors = ["Aaditya Samani"]
+edition = "2021"
+
+[lib]
+name = "drinkup_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["time"] }
+png = "0.17"
+uuid = { version = "1.10", features = ["v4"] }
+base64 = "0.22"

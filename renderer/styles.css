@@ -1,0 +1,250 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap');
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+#stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 0 16px 12px;
+  opacity: 0;
+}
+#stage.state-walk-in,
+#stage.state-waiting,
+#stage.state-happy,
+#stage.state-walk-out {
+  opacity: 1;
+  transition: opacity 0.04s ease;
+}
+
+/* ---------- the pet ---------- */
+
+#pet {
+  position: relative;
+  flex-shrink: 0;
+  will-change: transform;
+}
+.bob { position: relative; }
+#shadow {
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  width: 74px;
+  height: 12px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgba(0,0,0,.28), transparent 70%);
+  border-radius: 50%;
+}
+
+/* ---------- custom avatar image ---------- */
+
+#custom-avatar {
+  display: none;
+  width: 140px;
+  height: auto;
+  max-height: 160px;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 5px rgba(0,0,0,.2));
+}
+#stage.custom #drippy { display: none; }
+#stage.custom #custom-avatar { display: block; }
+
+/* ---------- states ---------- */
+
+#stage.state-walk-in #pet { animation: walk-in 2s cubic-bezier(.45,.05,.55,.95) forwards; }
+#stage.state-walk-in .bob { animation: bob .38s ease-in-out infinite; }
+#stage.state-walk-in .foot-l { animation: step .38s ease-in-out infinite; }
+#stage.state-walk-in .foot-r { animation: step .38s ease-in-out infinite reverse; }
+#stage.state-walk-in .pupil { transform: translateX(1.8px); }
+
+#stage.state-waiting .bob { animation: sway 2.6s ease-in-out infinite; }
+
+#stage.state-happy .bob { animation: hop .62s cubic-bezier(.3,.6,.4,1) 2; }
+#stage.state-happy .arm-r { animation: wave .62s ease-in-out 2; }
+
+#stage.state-walk-out #pet { animation: walk-out 2.3s cubic-bezier(.45,.05,.55,.95) forwards; }
+#stage.state-walk-out .bob { animation: bob .34s ease-in-out infinite; }
+#stage.state-walk-out .foot-l { animation: step .34s ease-in-out infinite; }
+#stage.state-walk-out .foot-r { animation: step .34s ease-in-out infinite reverse; }
+#stage.state-walk-out .pupil { transform: translateX(1.8px); }
+
+/* ---------- keyframes ---------- */
+
+@keyframes walk-in {
+  from { transform: translateX(100vw); }
+  to   { transform: translateX(0); }
+}
+@keyframes walk-out {
+  from { transform: translateX(0); }
+  to   { transform: translateX(100vw); }
+}
+@keyframes bob {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%      { transform: translateY(-7px) rotate(2deg); }
+}
+@keyframes step {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px) translateX(3px); }
+}
+@keyframes sway {
+  0%, 100% { transform: rotate(-2.5deg); }
+  50%      { transform: rotate(2.5deg); }
+}
+@keyframes hop {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  35%      { transform: translateY(-30px) scale(.96, 1.05); }
+  60%      { transform: translateY(0) scale(1.08, .92); }
+  80%      { transform: translateY(-8px) scale(1, 1); }
+}
+@keyframes wave {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-55deg); }
+}
+@keyframes blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(.08); }
+}
+
+/* ---------- avatar parts transforms ---------- */
+
+.eyes, .arm, .foot { transform-box: view-box; }
+.eyes { transform-origin: 60px 86px; animation: blink 3.6s infinite; }
+.arm-r { transform-origin: 94px 96px; }
+.arm-l { transform-origin: 26px 96px; }
+.foot-l { transform-origin: 46px 130px; }
+.foot-r { transform-origin: 74px 130px; }
+
+/* ---------- speech bubble ---------- */
+
+#bubble-wrap {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 380px;
+  pointer-events: none;
+  align-self: flex-end;
+  margin-bottom: 8px;
+}
+#bubble {
+  position: relative;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  color: #1e293b;
+  border-radius: 14px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255, 255, 255, .6);
+  box-shadow:
+    0 8px 32px rgba(15, 40, 80, .18),
+    0 2px 8px rgba(15, 40, 80, .08),
+    inset 0 1px 0 rgba(255, 255, 255, .5);
+  opacity: 0;
+  transform: scale(.6) translateX(12px);
+  transform-origin: bottom right;
+  transition: opacity .2s ease, transform .28s cubic-bezier(.34, 1.56, .64, 1);
+  pointer-events: none;
+}
+#bubble.show {
+  opacity: 1;
+  transform: scale(1) translateX(0);
+  pointer-events: auto;
+}
+#bubble::after {
+  content: '';
+  position: absolute;
+  right: -7px;
+  bottom: 18px;
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, .82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transform: rotate(45deg);
+  border-radius: 3px;
+  border-right: 1px solid rgba(255, 255, 255, .6);
+  border-top: 1px solid rgba(255, 255, 255, .6);
+  box-shadow: 2px -2px 4px rgba(15, 40, 80, .04);
+}
+#msg {
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 700;
+  letter-spacing: -.01em;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+button {
+  font: inherit;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  transition: all .15s ease;
+}
+#done {
+  background: #2563eb;
+  color: #fff;
+}
+#done:hover {
+  background: #1d4ed8;
+}
+#done:active { transform: scale(.97); }
+#skip {
+  background: transparent;
+  color: #94a3b8;
+  border: 1.5px solid transparent;
+}
+#skip:hover {
+  background: rgba(148, 163, 184, .08);
+  color: #64748b;
+  border-color: rgba(148, 163, 184, .18);
+}
+
+/* ---------- dark mode ---------- */
+
+#stage.dark #bubble {
+  background: rgba(30, 41, 59, .88);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, .08);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, .35),
+    0 2px 8px rgba(0, 0, 0, .15),
+    inset 0 1px 0 rgba(255, 255, 255, .06);
+}
+#stage.dark #bubble::after {
+  background: rgba(30, 41, 59, .88);
+  border-right-color: rgba(255, 255, 255, .08);
+  border-top-color: rgba(255, 255, 255, .08);
+}
+#stage.dark #done {
+  background: #2563eb;
+}
+#stage.dark #done:hover {
+  background: #1d4ed8;
+}
+#stage.dark #skip {
+  color: #94a3b8;
+}
+#stage.dark #skip:hover {
+  background: rgba(148, 163, 184, .12);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, .15);
+}

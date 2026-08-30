@@ -1,0 +1,126 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="stage">
+    <div id="bubble-wrap">
+      <div id="bubble" data-interactive>
+        <p id="msg"></p>
+        <div class="actions">
+          <button id="done">Done — I drank</button>
+          <button id="skip">skip</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pet">
+      <div class="bob">
+        <svg id="drippy" viewBox="0 0 120 140" width="96" height="112">
+          <defs>
+            <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#7cc7ff"/>
+              <stop offset="1" stop-color="#2f8fe0"/>
+            </linearGradient>
+            <radialGradient id="innerGrad" cx="50%" cy="30%" r="50%">
+              <stop offset="0" stop-color="#ffffff" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
+            </radialGradient>
+            <radialGradient id="shadowGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#1f6db4" stop-opacity="0.3"/>
+              <stop offset="100" stop-color="#1f6db4" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+
+          <path class="body"
+                d="M60 6 C 52 30, 22 58, 22 88 a38 38 0 0 0 76 0 C 98 58, 68 30, 60 6 Z"
+                fill="url(#bodyGrad)"
+                stroke="#1f6db4"
+                stroke-width="3"/>
+
+          <ellipse class="shine"
+                   cx="42" cy="62"
+                   rx="7" ry="12"
+                   fill="url(#innerGrad)"
+                   transform="rotate(-18 42 62)"/>
+
+          <ellipse class="foot foot-l"
+                   cx="46" cy="130"
+                   rx="12" ry="7"
+                   fill="#1f6db4"/>
+          <ellipse class="foot foot-r"
+                   cx="74" cy="130"
+                   rx="12" ry="7"
+                   fill="#1f6db4"/>
+
+          <path class="arm arm-l"
+                  d="M26 96 q -10 4 -12 14"
+                  fill="none"
+                  stroke="#2f8fe0"
+                  stroke-width="7"
+                  stroke-linecap="round"/>
+          <path class="arm arm-r"
+                  d="M94 96 q 10 4 12 14"
+                  fill="none"
+                  stroke="#2f8fe0"
+                  stroke-width="7"
+                  stroke-linecap="round"/>
+
+          <g class="eyes">
+            <ellipse class="eye eye-l"
+                     cx="47" cy="86"
+                     rx="8.5" ry="10"
+                     fill="#ffffff"/>
+            <ellipse class="eye eye-r"
+                     cx="73" cy="86"
+                     rx="8.5" ry="10"
+                     fill="#ffffff"/>
+            <circle class="pupil pupil-l"
+                    cx="49" cy="88"
+                    r="4.2"
+                    fill="#173a5e"/>
+            <circle class="pupil pupil-r"
+                    cx="75" cy="88"
+                    r="4.2"
+                    fill="#173a5e"/>
+            <circle class="highlight highlight-l"
+                    cx="50" cy="83"
+                    r="2.5"
+                    fill="#ffffff"/>
+            <circle class="highlight highlight-r"
+                    cx="76" cy="83"
+                    r="2.5"
+                    fill="#ffffff"/>
+          </g>
+
+          <ellipse class="blush blush-l"
+                   cx="38" cy="100"
+                   rx="5.5" ry="3.5"
+                   fill="#ff9db1"
+                   opacity="0.75"/>
+          <ellipse class="blush blush-r"
+                   cx="82" cy="100"
+                   rx="5.5" ry="3.5"
+                   fill="#ff9db1"
+                   opacity="0.75"/>
+
+          <path class="mouth"
+                d="M52 104 q 8 8 16 0"
+                fill="none"
+                stroke="#173a5e"
+                stroke-width="3.5"
+                stroke-linecap="round"/>
+        </svg>
+        <img id="custom-avatar" alt="" />
+        <div id="shadow"></div>
+      </div>
+    </div>
+  </div>
+  <script src="renderer.js"></script>
+</body>
+</html>

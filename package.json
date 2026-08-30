@@ -1,0 +1,17 @@
+{
+  "name": "drinkup",
+  "productName": "DrinkUp",
+  "version": "0.1.0",
+  "description": "A friendly desktop buddy that walks across your screen to remind you to drink water",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "dev": "tauri dev",
+    "build": "tauri build",
+    "icon": "node scripts/make-icon.js && node scripts/make-ico.js"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.11.4",
+    "pngjs": "^7.0.0"
+  }
+}

@@ -1,0 +1,22 @@
+# Node
+node_modules/
+
+# Rust / Tauri build artifacts (can be GBs — never commit these)
+src-tauri/target/
+
+# Tauri generated files
+src-tauri/gen/
+
+# Packaged installers / bundles
+src-tauri/target/release/bundle/
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo

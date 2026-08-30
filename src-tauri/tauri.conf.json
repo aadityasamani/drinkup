@@ -1,0 +1,58 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "DrinkUp",
+  "version": "0.1.0",
+  "identifier": "dev.aaditya.drinkup",
+  "build": {
+    "frontendDist": "../renderer"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "DrinkUp",
+        "width": 520,
+        "height": 300,
+        "x": 0,
+        "y": 0,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "resizable": false,
+        "maximizable": false,
+        "minimizable": false,
+        "skipTaskbar": true,
+        "shadow": false,
+        "focus": false,
+        "visible": false
+      },
+      {
+        "label": "settings",
+        "title": "DrinkUp — Settings",
+        "url": "settings.html",
+        "width": 560,
+        "height": 720,
+        "minWidth": 480,
+        "minHeight": 500,
+        "resizable": true,
+        "maximizable": true,
+        "center": true,
+        "visible": false,
+        "decorations": true,
+        "transparent": false,
+        "skipTaskbar": false,
+        "shadow": true,
+        "focus": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "icon": ["icons/icon.png", "icons/icon.ico"]
+  }
+}

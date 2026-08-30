@@ -1,0 +1,79 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 120 140" width="32" height="37">
+            <defs><linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc7ff"/><stop offset="1" stop-color="#2f8fe0"/></linearGradient></defs>
+            <path d="M60 6 C52 30 22 58 22 88 a38 38 0 0076 0 C98 58 68 30 60 6Z" fill="url(#bg2)" stroke="#fff" stroke-width="2" opacity=".9"/>
+            <ellipse cx="47" cy="86" rx="7" ry="8" fill="#fff"/><ellipse cx="73" cy="86" rx="7" ry="8" fill="#fff"/>
+            <circle cx="49" cy="87" r="3.5" fill="#173a5e"/><circle cx="75" cy="87" r="3.5" fill="#173a5e"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">DrinkUp</span>
+          <span class="brand-sub">Stay hydrated</span>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
+          <span class="theme-icon" id="theme-icon">&#9789;</span>
+          <span class="theme-label" id="theme-label">Dark mode</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <section class="card status-card" id="status-card">
+        <div class="status-row">
+          <div>
+            <div class="status-label" id="status-label">Reminding every 45 minutes</div>
+            <div class="status-sub" id="status-sub">Drippy will swing by soon</div>
+          </div>
+          <div class="badge badge-active" id="status-badge">
+            <span class="pulse-dot"></span>
+            Active
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Remind me every</h2>
+        <div class="interval-row" id="interval-grid"></div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">Avatar</h2>
+        <div class="avatar-grid" id="avatar-grid"></div>
+        <button class="btn btn-upload" id="upload-btn">
+          <span class="btn-icon">+</span> Upload PNG Avatar
+        </button>
+        <input type="file" id="avatar-file" accept=".png,image/png" hidden />
+      </section>
+
+      <div class="action-stack">
+        <button class="btn btn-primary" id="test-btn">
+          <span class="btn-icon">&#9654;</span> Test reminder now
+        </button>
+        <button class="btn btn-secondary" id="pause-btn">
+          <span class="btn-icon">&#10074;&#10074;</span> Pause reminders
+        </button>
+      </div>
+
+      <footer class="foot">
+        v0.1.0
+      </footer>
+    </main>
+  </div>
+  <script src="settings.js"></script>
+</body>
+</html>
