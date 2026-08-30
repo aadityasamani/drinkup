@@ -6,14 +6,6 @@ Your animated buddy lives in the system tray, walks across your screen at your c
 
 ---
 
-## Download
-
-**[⬇ DrinkUp_0.1.0_x64-setup.exe](https://github.com/aadityasamani/drinkup/releases/latest)**
-
-Windows 10 / 11 · x64 · ~4 MB installer
-
----
-
 ## What it does
 
 At whatever interval you set, your buddy strolls in from the corner of your screen, pops up a friendly message, and waits for you to click **Done ✓ I drank** or **skip** — then walks off. That's it.
@@ -61,16 +53,6 @@ Timer fires
 ```
 
 Settings are saved to `%APPDATA%\dev.aaditya.drinkup\settings.json`.
-
----
-
-## Roadmap
-
-- [ ] macOS + Linux support
-- [ ] Autostart on login
-- [ ] Quiet hours / Do Not Disturb schedule
-- [ ] More avatar animations and moods
-- [ ] Daily hydration goal tracking
 
 ---
 
