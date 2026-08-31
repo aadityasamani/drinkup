@@ -7,8 +7,8 @@ use tauri::menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, PredefinedMenuI
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
-const WIN_HEIGHT: u32 = 300;
-const WIN_WIDTH: u32 = 520;
+const WIN_HEIGHT: u32 = 340;
+const WIN_WIDTH: u32 = 640;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Settings {
@@ -198,7 +198,7 @@ fn set_walk_mode(w: &tauri::WebviewWindow) {
     let _ = w.set_ignore_cursor_events(true);
 }
 
-// Shrink to bottom-right 520x300 and enable mouse interactions for speech bubble.
+// Shrink to bottom-right 640x340 and enable mouse interactions for speech bubble.
 fn set_interactive_mode(w: &tauri::WebviewWindow) {
     if let Ok(Some(m)) = w.current_monitor() {
         let size = m.size();
@@ -212,11 +212,11 @@ fn set_interactive_mode(w: &tauri::WebviewWindow) {
     let _ = w.set_ignore_cursor_events(false);
 }
 
-fn show_reminder(app: &AppHandle, demo: bool) {
+fn show_reminder(app: &AppHandle, demo: bool, force: bool) {
     let state = app.state::<AppState>();
     {
         let mut visible = state.reminder_visible.lock().unwrap();
-        if *visible {
+        if *visible && !force {
             return;
         }
         *visible = true;
@@ -270,15 +270,12 @@ fn close_reminder(app: &AppHandle) {
     let state = app.state::<AppState>();
     {
         let mut visible = state.reminder_visible.lock().unwrap();
-        if !*visible {
-            return;
-        }
         *visible = false;
     }
     // Give the exit animation (happy hop + walk off) time to play before hiding.
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(3900)).await;
+        tokio::time::sleep(Duration::from_millis(3000)).await;
         if let Some(w) = app2.get_webview_window("main") {
             let _ = w.set_ignore_cursor_events(true);
             let _ = w.hide();
@@ -307,7 +304,7 @@ fn schedule(app: &AppHandle) {
             && !*st.paused.lock().unwrap()
             && !*st.reminder_visible.lock().unwrap()
         {
-            show_reminder(&app2, false);
+            show_reminder(&app2, false, false);
         }
     });
 }
@@ -406,7 +403,7 @@ fn handle_menu_event(app: &AppHandle, event: MenuEvent) {
     let id = event.id().0.clone();
     match id.as_str() {
         "open-settings" => open_settings_window(app),
-        "remind-now" => show_reminder(app, false),
+        "remind-now" => show_reminder(app, false, true),
         "pause" => {
             toggle_pause_state(app);
         }
@@ -490,7 +487,7 @@ fn toggle_pause(app: AppHandle) -> bool {
 
 #[tauri::command]
 fn remind_now(app: AppHandle) {
-    show_reminder(&app, false);
+    show_reminder(&app, false, true);
 }
 
 // ---------- avatar commands ----------

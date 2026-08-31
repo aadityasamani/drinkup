@@ -12,8 +12,8 @@
       {
         "label": "main",
         "title": "DrinkUp",
-        "width": 520,
-        "height": 300,
+        "width": 640,
+        "height": 340,
         "x": 0,
         "y": 0,
         "decorations": false,

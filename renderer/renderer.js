@@ -62,12 +62,12 @@ function chime() {
 }
 
 // ---- splash animation ----
-// A water drop falls from the top of the screen, squash-bounces at center,
-// then gravity-pulls it off the bottom. onDone fires as it starts exiting.
+// A clean water drop falls from the top of the screen, squashes at center,
+// and exits down as the avatar walks in.
 
-const SPLASH_TOTAL_MS  = 2900; // full animation duration (matches CSS)
-const SPLASH_IMPACT_MS = 1160; // 40% of 2900 — when drop hits center
-const SPLASH_DONE_MS   = 2450; // call onDone as drop starts falling away
+const SPLASH_TOTAL_MS  = 1250; // full animation duration (matches CSS)
+const SPLASH_IMPACT_MS = 400;  // when drop hits center
+const SPLASH_DONE_MS   = 980;  // call onDone as drop exits
 
 const sdContainer = document.getElementById('sd-container');
 const sdRipple    = document.getElementById('sd-ripple');
@@ -84,7 +84,7 @@ function runSplash(onDone) {
   // Fire the impact ripple when the drop hits center
   later(() => sdRipple.classList.add('pop'), SPLASH_IMPACT_MS);
 
-  // Start the avatar walk-in
+  // Start the avatar walk-in as drop exits
   later(onDone, SPLASH_DONE_MS);
 
   // Clean up after animation fully completes
@@ -92,7 +92,7 @@ function runSplash(onDone) {
     splashOverlay.classList.remove('active');
     sdContainer.classList.remove('go');
     sdRipple.classList.remove('pop');
-  }, SPLASH_TOTAL_MS + 100);
+  }, SPLASH_TOTAL_MS + 50);
 }
 
 function showReminder(data) {
@@ -116,7 +116,12 @@ function showReminder(data) {
       setState('waiting');
       try { await tauri.core.invoke('set_interactive', { interactive: true }); } catch (e) {}
       bubble.classList.add('show');
-    }, 2050);
+    }, 1850);
+
+    // Auto-dismiss after 60s if unattended so it never blocks subsequent reminders
+    later(() => {
+      respond('skip');
+    }, 60000);
   };
 
   const startSplashThenProceed = () => runSplash(proceed);

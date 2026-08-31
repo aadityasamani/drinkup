@@ -16,13 +16,13 @@ html, body {
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 520px;
-  height: 300px;
+  width: 640px;
+  height: 340px;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 0 16px 12px;
+  gap: 12px;
+  padding: 0 20px 16px;
   opacity: 0;
 }
 #stage.state-walk-in,
@@ -67,7 +67,7 @@ html, body {
 
 /* ---------- states ---------- */
 
-#stage.state-walk-in #pet { animation: walk-in 2s cubic-bezier(.45,.05,.55,.95) forwards; }
+#stage.state-walk-in #pet { animation: walk-in 1.8s cubic-bezier(.45,.05,.55,.95) forwards; }
 #stage.state-walk-in .bob { animation: bob .38s ease-in-out infinite; }
 #stage.state-walk-in .foot-l { animation: step .38s ease-in-out infinite; }
 #stage.state-walk-in .foot-r { animation: step .38s ease-in-out infinite reverse; }
@@ -78,7 +78,7 @@ html, body {
 #stage.state-happy .bob { animation: hop .62s cubic-bezier(.3,.6,.4,1) 2; }
 #stage.state-happy .arm-r { animation: wave .62s ease-in-out 2; }
 
-#stage.state-walk-out #pet { animation: walk-out 2.3s cubic-bezier(.45,.05,.55,.95) forwards; }
+#stage.state-walk-out #pet { animation: walk-out 2.0s cubic-bezier(.45,.05,.55,.95) forwards; }
 #stage.state-walk-out .bob { animation: bob .34s ease-in-out infinite; }
 #stage.state-walk-out .foot-l { animation: step .34s ease-in-out infinite; }
 #stage.state-walk-out .foot-r { animation: step .34s ease-in-out infinite reverse; }
@@ -87,12 +87,12 @@ html, body {
 /* ---------- keyframes ---------- */
 
 @keyframes walk-in {
-  from { transform: translateX(260px); }
+  from { transform: translateX(280px); }
   to   { transform: translateX(0); }
 }
 @keyframes walk-out {
   from { transform: translateX(0); }
-  to   { transform: translateX(260px); }
+  to   { transform: translateX(280px); }
 }
 @keyframes bob {
   0%, 100% { transform: translateY(0) rotate(-2deg); }
@@ -135,14 +135,14 @@ html, body {
 #bubble-wrap {
   flex-shrink: 1;
   min-width: 0;
-  max-width: 380px;
+  max-width: 440px;
   pointer-events: none;
   align-self: flex-end;
   margin-bottom: 8px;
 }
 #bubble {
   position: relative;
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .88);
   backdrop-filter: blur(20px) saturate(1.6);
   -webkit-backdrop-filter: blur(20px) saturate(1.6);
   color: #1e293b;
@@ -171,7 +171,7 @@ html, body {
   bottom: 18px;
   width: 14px;
   height: 14px;
-  background: rgba(255, 255, 255, .82);
+  background: rgba(255, 255, 255, .88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   transform: rotate(45deg);
@@ -252,8 +252,8 @@ button {
 }
 
 /* =========================================================
-   SPLASH — physics water-drop animation
-   Falls from top → squash+bounce at center → exits bottom
+   SPLASH — clean, minimal physics water-drop animation
+   Drops from top → squashes at center → exits smoothly
    ========================================================= */
 
 #splash-overlay {
@@ -263,7 +263,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: transparent; /* no scrim — just the drop */
+  background: transparent;
   pointer-events: none;
   visibility: hidden;
 }
@@ -271,100 +271,79 @@ button {
   visibility: visible;
 }
 
-/* ---------- drop container (handles gravity arc) ---------- */
+/* ---------- drop container (handles vertical fall & rise) ---------- */
 
 #sd-container {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Starts above the viewport — animation moves it */
-  transform: translateY(-62vh);
+  transform: translateY(-55vh);
   opacity: 0;
 }
 
 #sd-container.go {
-  animation: sdFall 2.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: sdFall 1.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-/* ---------- SVG drop (handles squash & stretch) ---------- */
+/* ---------- SVG drop (clean, minimal glow & squash) ---------- */
 
 #sd-svg {
-  width: 130px;
-  height: 156px;
+  width: 105px;
+  height: 126px;
   display: block;
   filter:
-    drop-shadow(0 20px 50px rgba(18, 85, 184, 0.8))
-    drop-shadow(0 0  80px rgba(74, 184, 255, 0.55))
-    drop-shadow(0 0 140px rgba(74, 184, 255, 0.25));
+    drop-shadow(0 12px 30px rgba(18, 85, 184, 0.45))
+    drop-shadow(0 0 45px rgba(74, 184, 255, 0.3));
   overflow: visible;
 }
 
 #sd-container.go #sd-svg {
-  animation: sdSquash 2.9s ease forwards;
+  animation: sdSquash 1.25s ease-out forwards;
 }
 
-/* ---------- impact ripple — ellipse at "landing" ---------- */
+/* ---------- subtle impact ripple ---------- */
 
 #sd-ripple {
   position: absolute;
-  bottom: -22px;
+  bottom: -16px;
   left: 50%;
-  width: 130px;
-  height: 26px;
+  width: 90px;
+  height: 20px;
   border-radius: 50%;
+  border: 1.5px solid rgba(74, 184, 255, 0.5);
   transform: translateX(-50%) scale(0);
   opacity: 0;
   background: radial-gradient(ellipse at center,
-    rgba(74, 184, 255, 0.7)  0%,
-    rgba(74, 184, 255, 0.25) 45%,
+    rgba(74, 184, 255, 0.35) 0%,
     transparent 70%);
 }
 #sd-ripple.pop {
-  animation: ripplePop 0.65s ease-out forwards;
+  animation: ripplePop 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
 }
 
-/* ---------- keyframes ---------- */
-
-/*
-  Timeline (2.9 s total):
-    0%    → above screen, invisible
-    4%    → visible
-    40%   → lands at center (squash)
-    52%   → bounces up
-    63%   → comes back down (settle)
-    70%   → 2nd micro-bounce up
-    76%   → settles at center, fully formed
-    84%   → starts exit wind-up
-    100%  → off bottom, faded
-*/
+/* ---------- keyframes (1.25s total) ---------- */
 
 @keyframes sdFall {
-  0%   { transform: translateY(-62vh); opacity: 0; }
-  4%   { opacity: 1; }
-  40%  { transform: translateY(0);      opacity: 1; } /* lands */
-  52%  { transform: translateY(-9vh);   opacity: 1; } /* bounces up */
-  63%  { transform: translateY(1.5vh);  opacity: 1; } /* settles */
-  70%  { transform: translateY(-3vh);   opacity: 1; } /* micro-bounce */
-  76%  { transform: translateY(0);      opacity: 1; } /* fully rested */
-  84%  { transform: translateY(0);      opacity: 1; } /* hold */
-  88%  { transform: translateY(4vh);    opacity: 1; } /* wind-up for exit */
-  100% { transform: translateY(78vh);   opacity: 0; } /* exits bottom */
+  0%   { transform: translateY(-55vh); opacity: 0; }
+  10%  { opacity: 1; }
+  32%  { transform: translateY(0); opacity: 1; }     /* impact at center */
+  48%  { transform: translateY(-6vh); opacity: 1; }  /* light rebound bounce */
+  64%  { transform: translateY(0); opacity: 1; }     /* settle */
+  78%  { transform: translateY(0); opacity: 1; }     /* brief pause */
+  100% { transform: translateY(58vh); opacity: 0; }  /* smooth exit down */
 }
 
 @keyframes sdSquash {
-  0%   { transform: scale(1); }
-  40%  { transform: scaleX(1.35) scaleY(0.65); } /* hard squash on impact */
-  52%  { transform: scaleX(0.84) scaleY(1.16); } /* tall stretch on bounce */
-  63%  { transform: scaleX(1.07) scaleY(0.95); } /* settle overshoot */
-  70%  { transform: scaleX(0.96) scaleY(1.03); } /* micro stretch */
-  76%  { transform: scale(1);                   } /* fully settled */
-  84%  { transform: scale(1);                   } /* hold */
-  88%  { transform: scaleX(1.14) scaleY(0.88); } /* squeeze for exit */
-  100% { transform: scale(0.35);                } /* tiny as it falls away */
+  0%   { transform: scale(0.9); }
+  32%  { transform: scaleX(1.24) scaleY(0.76); }     /* impact squash */
+  48%  { transform: scaleX(0.9)  scaleY(1.1);  }     /* rebound stretch */
+  64%  { transform: scale(1); }                      /* rested */
+  78%  { transform: scale(1); }
+  100% { transform: scale(0.65); }                   /* fade away */
 }
 
 @keyframes ripplePop {
-  0%   { transform: translateX(-50%) scale(0.15); opacity: 0.95; }
-  100% { transform: translateX(-50%) scale(4);    opacity: 0; }
+  0%   { transform: translateX(-50%) scale(0.2); opacity: 0.85; }
+  100% { transform: translateX(-50%) scale(2.8); opacity: 0; }
 }
