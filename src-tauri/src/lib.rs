@@ -173,6 +173,17 @@ fn list_avatars(app: &AppHandle) -> Vec<Avatar> {
 
 // ---------- reminder flow ----------
 
+// Position the overlay full-screen across the current monitor, click-through on.
+fn set_fullscreen_mode(w: &tauri::WebviewWindow) {
+    if let Ok(Some(m)) = w.current_monitor() {
+        let size = m.size();
+        let pos = m.position();
+        let _ = w.set_position(tauri::PhysicalPosition::new(pos.x, pos.y));
+        let _ = w.set_size(tauri::PhysicalSize::new(size.width, size.height));
+    }
+    let _ = w.set_ignore_cursor_events(true);
+}
+
 // Position the overlay at the bottom-right of the screen, click-through on.
 fn set_walk_mode(w: &tauri::WebviewWindow) {
     if let Ok(Some(m)) = w.current_monitor() {
@@ -187,8 +198,17 @@ fn set_walk_mode(w: &tauri::WebviewWindow) {
     let _ = w.set_ignore_cursor_events(true);
 }
 
-// Just toggle click-through off — window stays in place.
+// Shrink to bottom-right 520x300 and enable mouse interactions for speech bubble.
 fn set_interactive_mode(w: &tauri::WebviewWindow) {
+    if let Ok(Some(m)) = w.current_monitor() {
+        let size = m.size();
+        let pos = m.position();
+        let win_w = WIN_WIDTH;
+        let x = pos.x + (size.width.saturating_sub(win_w)) as i32;
+        let y = pos.y + (size.height.saturating_sub(WIN_HEIGHT)) as i32;
+        let _ = w.set_position(tauri::PhysicalPosition::new(x, y));
+        let _ = w.set_size(tauri::PhysicalSize::new(win_w, WIN_HEIGHT));
+    }
     let _ = w.set_ignore_cursor_events(false);
 }
 
@@ -230,8 +250,8 @@ fn show_reminder(app: &AppHandle, demo: bool) {
     };
 
     if let Some(w) = app.get_webview_window("main") {
-        // 1. Position the window off-screen correctly.
-        set_walk_mode(&w);
+        // 1. Position the window full-screen on the monitor for the splash animation.
+        set_fullscreen_mode(&w);
         // 2. Show the window so it is visible when the event fires.
         let _ = w.show();
     }
