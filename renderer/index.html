@@ -8,28 +8,62 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Full-screen splash that plays before the avatar walks in -->
+  <!-- Full-screen splash notification — shown before the avatar walks in -->
   <div id="splash-overlay" aria-hidden="true">
-    <div id="splash-center">
-      <div class="ripple r1"></div>
-      <div class="ripple r2"></div>
-      <div class="ripple r3"></div>
-      <svg id="splash-drop" viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="splashBodyGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#90d8ff"/>
-            <stop offset="1" stop-color="#2f8fe0"/>
-          </linearGradient>
-          <radialGradient id="splashShine" cx="38%" cy="28%" r="45%">
-            <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
-            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <path d="M30 3 C 26 15, 8 30, 8 46 a22 22 0 0 0 44 0 C 52 30, 34 15, 30 3 Z"
-              fill="url(#splashBodyGrad)"/>
-        <path d="M30 3 C 26 15, 8 30, 8 46 a22 22 0 0 0 44 0 C 52 30, 34 15, 30 3 Z"
-              fill="url(#splashShine)"/>
-      </svg>
+    <!-- Halo rings behind the card -->
+    <div class="splash-halo h1"></div>
+    <div class="splash-halo h2"></div>
+
+    <!-- The notification card -->
+    <div id="splash-card">
+      <!-- Big water drop with wave fill -->
+      <div id="splash-drop-wrap">
+        <svg id="splash-drop-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sdGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%"  stop-color="#60c8ff"/>
+              <stop offset="100%" stop-color="#1a72d9"/>
+            </linearGradient>
+            <radialGradient id="sdShine" cx="35%" cy="25%" r="42%">
+              <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.65"/>
+              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+            </radialGradient>
+            <!-- Clipping mask shaped like the drop -->
+            <clipPath id="dropClip">
+              <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"/>
+            </clipPath>
+          </defs>
+
+          <!-- Drop outline / glass shell -->
+          <path id="sd-shell"
+                d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
+                fill="rgba(144,216,255,0.12)"
+                stroke="rgba(144,216,255,0.45)"
+                stroke-width="2"/>
+
+          <!-- Animated water fill inside the drop -->
+          <g clip-path="url(#dropClip)">
+            <!-- Wave shape that rises from below -->
+            <path id="sd-wave"
+                  d="M-20 95 Q0 80 20 95 Q40 110 60 95 Q80 80 100 95 Q120 110 140 95 L140 130 L-20 130 Z"
+                  fill="url(#sdGrad)">
+            </path>
+          </g>
+
+          <!-- Shine overlay -->
+          <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
+                fill="url(#sdShine)"/>
+
+          <!-- Tiny inner highlight dot -->
+          <ellipse cx="36" cy="52" rx="7" ry="11"
+                   fill="rgba(255,255,255,0.35)"
+                   transform="rotate(-18 36 52)"/>
+        </svg>
+      </div>
+
+      <!-- Label -->
+      <p id="splash-label">Time to hydrate</p>
+      <p id="splash-sub">Your body will thank you 💧</p>
     </div>
   </div>
   <div id="stage">

@@ -64,9 +64,9 @@ function chime() {
 // ---- splash animation ----
 // Plays the water-drop splash overlay, then calls `onDone` when the
 // overlay has faded out and the avatar should enter.
-const SPLASH_IN_MS  = 450;   // fade-in duration
-const SPLASH_HOLD_MS = 1300; // how long the drop + ripples are visible
-const SPLASH_OUT_MS  = 550;  // fade-out duration
+const SPLASH_IN_MS   = 500;   // scrim + card fade-in
+const SPLASH_HOLD_MS = 1800;  // card stays visible (wave fills, text reads)
+const SPLASH_OUT_MS  = 500;   // fade-out duration
 
 function runSplash(onDone) {
   // Reset animation state
@@ -84,8 +84,8 @@ function runSplash(onDone) {
     void splashOverlay.offsetWidth;
     splashOverlay.classList.add('animate-out');
 
-    // Start avatar walk-in 150 ms into the fade-out (feels seamless)
-    later(onDone, 150);
+    // Start avatar walk-in 200 ms into the fade-out (feels seamless)
+    later(onDone, 200);
 
     // Clean up overlay after fade-out finishes
     later(() => {
