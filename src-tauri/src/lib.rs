@@ -693,7 +693,7 @@ pub fn run() {
                 save_settings(&handle);
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_secs(6)).await;
-                    show_reminder(&handle, true);
+                    show_reminder(&handle, true, true);
                 });
             } else {
                 schedule(&handle);
