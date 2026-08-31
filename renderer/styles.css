@@ -248,3 +248,99 @@ button {
   color: #cbd5e1;
   border-color: rgba(148, 163, 184, .15);
 }
+
+/* =========================================================
+   SPLASH OVERLAY — shown before avatar walks in
+   ========================================================= */
+
+#splash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  pointer-events: none;
+
+  /* hidden by default */
+  opacity: 0;
+  visibility: hidden;
+}
+
+#splash-overlay.active {
+  visibility: visible;
+}
+
+#splash-overlay.animate-in {
+  animation: splashFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+#splash-overlay.animate-out {
+  animation: splashFadeOut 0.55s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+#splash-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160px;
+  height: 160px;
+}
+
+/* ---------- water drop ---------- */
+
+#splash-drop {
+  width: 52px;
+  height: 62px;
+  position: relative;
+  z-index: 2;
+  filter:
+    drop-shadow(0 4px 16px rgba(47, 143, 224, 0.55))
+    drop-shadow(0 0 32px rgba(144, 216, 255, 0.35));
+  animation: dropPop 0.5s cubic-bezier(0.22, 1.6, 0.45, 1) 0.08s both;
+}
+
+/* ---------- ripples ---------- */
+
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(144, 216, 255, 0.7);
+  inset: 0;
+  margin: auto;
+  opacity: 0;
+}
+
+.r1 { animation: rippleOut 1.4s cubic-bezier(0.2, 0.8, 0.4, 1) 0.25s infinite; width: 60px;  height: 60px; }
+.r2 { animation: rippleOut 1.4s cubic-bezier(0.2, 0.8, 0.4, 1) 0.55s infinite; width: 60px;  height: 60px; }
+.r3 { animation: rippleOut 1.4s cubic-bezier(0.2, 0.8, 0.4, 1) 0.85s infinite; width: 60px;  height: 60px; }
+
+/* ---------- keyframes ---------- */
+
+@keyframes splashFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes splashFadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes dropPop {
+  from { transform: scale(0.3) translateY(8px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);   opacity: 1; }
+}
+
+@keyframes rippleOut {
+  0%   { transform: scale(1);   opacity: 0.75; border-color: rgba(144, 216, 255, 0.7); }
+  100% { transform: scale(2.5); opacity: 0;    border-color: rgba(144, 216, 255, 0); }
+}
+
+/* dark-mode tint for the overlay background */
+#stage.dark ~ #splash-overlay,
+body.dark-splash #splash-overlay {
+  /* no background shift needed — the drop glows work on any bg */
+}

@@ -8,6 +8,30 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <!-- Full-screen splash that plays before the avatar walks in -->
+  <div id="splash-overlay" aria-hidden="true">
+    <div id="splash-center">
+      <div class="ripple r1"></div>
+      <div class="ripple r2"></div>
+      <div class="ripple r3"></div>
+      <svg id="splash-drop" viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="splashBodyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#90d8ff"/>
+            <stop offset="1" stop-color="#2f8fe0"/>
+          </linearGradient>
+          <radialGradient id="splashShine" cx="38%" cy="28%" r="45%">
+            <stop offset="0" stop-color="#ffffff" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <path d="M30 3 C 26 15, 8 30, 8 46 a22 22 0 0 0 44 0 C 52 30, 34 15, 30 3 Z"
+              fill="url(#splashBodyGrad)"/>
+        <path d="M30 3 C 26 15, 8 30, 8 46 a22 22 0 0 0 44 0 C 52 30, 34 15, 30 3 Z"
+              fill="url(#splashShine)"/>
+      </svg>
+    </div>
+  </div>
   <div id="stage">
     <div id="bubble-wrap">
       <div id="bubble" data-interactive>

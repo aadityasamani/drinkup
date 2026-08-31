@@ -6,6 +6,7 @@ const msgEl = document.getElementById('msg');
 const doneBtn = document.getElementById('done');
 const skipBtn = document.getElementById('skip');
 const customImg = document.getElementById('custom-avatar');
+const splashOverlay = document.getElementById('splash-overlay');
 
 const MESSAGES = [
   "Hey! Time to drink water \u{1F4A7}",
@@ -60,6 +61,39 @@ function chime() {
   } catch (e) { /* a silent reminder is fine too */ }
 }
 
+// ---- splash animation ----
+// Plays the water-drop splash overlay, then calls `onDone` when the
+// overlay has faded out and the avatar should enter.
+const SPLASH_IN_MS  = 450;   // fade-in duration
+const SPLASH_HOLD_MS = 1300; // how long the drop + ripples are visible
+const SPLASH_OUT_MS  = 550;  // fade-out duration
+
+function runSplash(onDone) {
+  // Reset animation state
+  splashOverlay.classList.remove('animate-in', 'animate-out');
+  splashOverlay.classList.add('active');
+
+  // Force reflow so the animation restarts cleanly
+  void splashOverlay.offsetWidth;
+  splashOverlay.classList.add('animate-in');
+
+  // After hold period, start fading out; call onDone mid-fade so the
+  // avatar walk-in overlaps with the tail of the fade-out.
+  later(() => {
+    splashOverlay.classList.remove('animate-in');
+    void splashOverlay.offsetWidth;
+    splashOverlay.classList.add('animate-out');
+
+    // Start avatar walk-in 150 ms into the fade-out (feels seamless)
+    later(onDone, 150);
+
+    // Clean up overlay after fade-out finishes
+    later(() => {
+      splashOverlay.classList.remove('active', 'animate-out');
+    }, SPLASH_OUT_MS);
+  }, SPLASH_IN_MS + SPLASH_HOLD_MS);
+}
+
 function showReminder(data) {
   clearTimers();
   const avatar = data.avatar || {};
@@ -71,7 +105,7 @@ function showReminder(data) {
   const proceed = () => {
     const who = avatar.name || 'Drippy';
     msgEl.textContent = data.demo
-      ? "Hi, I'm " + who + "! \u{1F4A7} I'll swing by " + fmtInterval(data.intervalMin || 45) +
+      ? "Hi, I'm " + who + " \u{1F4A7} I'll swing by " + fmtInterval(data.intervalMin || 45) +
         " to remind you to hydrate. Try clicking \u201CDone\u201D!"
       : MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
     bubble.classList.remove('show');
@@ -84,13 +118,15 @@ function showReminder(data) {
     }, 2050);
   };
 
+  const startSplashThenProceed = () => runSplash(proceed);
+
   if (customActive) {
-    customImg.onload = proceed;
-    customImg.onerror = () => { customActive = false; proceed(); };
+    customImg.onload = startSplashThenProceed;
+    customImg.onerror = () => { customActive = false; startSplashThenProceed(); };
     customImg.src = avatar.url;
   } else {
     customImg.src = '';
-    proceed();
+    startSplashThenProceed();
   }
 }
 
