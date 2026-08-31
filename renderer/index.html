@@ -8,64 +8,49 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <!-- Full-screen splash notification — shown before the avatar walks in -->
+  <!-- Physics water-drop that plays before the avatar walks in -->
   <div id="splash-overlay" aria-hidden="true">
-    <!-- Halo rings behind the card -->
-    <div class="splash-halo h1"></div>
-    <div class="splash-halo h2"></div>
+    <div id="sd-container">
+      <!-- Impact ripple at the "landing" moment -->
+      <div id="sd-ripple"></div>
 
-    <!-- The notification card -->
-    <div id="splash-card">
-      <!-- Big water drop with wave fill -->
-      <div id="splash-drop-wrap">
-        <svg id="splash-drop-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="sdGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%"  stop-color="#60c8ff"/>
-              <stop offset="100%" stop-color="#1a72d9"/>
-            </linearGradient>
-            <radialGradient id="sdShine" cx="35%" cy="25%" r="42%">
-              <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.65"/>
-              <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
-            </radialGradient>
-            <!-- Clipping mask shaped like the drop -->
-            <clipPath id="dropClip">
-              <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"/>
-            </clipPath>
-          </defs>
+      <!-- The drop itself — large, glowing, beautiful -->
+      <svg id="sd-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="sdBodyGrad" x1="0.15" y1="0" x2="0.4" y2="1">
+            <stop offset="0%"   stop-color="#b8eaff"/>
+            <stop offset="35%"  stop-color="#4ab8ff"/>
+            <stop offset="100%" stop-color="#1255b8"/>
+          </linearGradient>
+          <radialGradient id="sdShine" cx="30%" cy="20%" r="38%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.85"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+          </radialGradient>
+          <radialGradient id="sdDepth" cx="70%" cy="78%" r="42%">
+            <stop offset="0%"   stop-color="#0a3a8a" stop-opacity="0.45"/>
+            <stop offset="100%" stop-color="#0a3a8a" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
 
-          <!-- Drop outline / glass shell -->
-          <path id="sd-shell"
-                d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
-                fill="rgba(144,216,255,0.12)"
-                stroke="rgba(144,216,255,0.45)"
-                stroke-width="2"/>
-
-          <!-- Animated water fill inside the drop -->
-          <g clip-path="url(#dropClip)">
-            <!-- Wave shape that rises from below -->
-            <path id="sd-wave"
-                  d="M-20 95 Q0 80 20 95 Q40 110 60 95 Q80 80 100 95 Q120 110 140 95 L140 130 L-20 130 Z"
-                  fill="url(#sdGrad)">
-            </path>
-          </g>
-
-          <!-- Shine overlay -->
-          <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
-                fill="url(#sdShine)"/>
-
-          <!-- Tiny inner highlight dot -->
-          <ellipse cx="36" cy="52" rx="7" ry="11"
-                   fill="rgba(255,255,255,0.35)"
-                   transform="rotate(-18 36 52)"/>
-        </svg>
-      </div>
-
-      <!-- Label -->
-      <p id="splash-label">Time to hydrate</p>
-      <p id="splash-sub">Your body will thank you 💧</p>
+        <!-- Main body -->
+        <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
+              fill="url(#sdBodyGrad)"/>
+        <!-- Depth shadow inside -->
+        <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
+              fill="url(#sdDepth)"/>
+        <!-- Shine -->
+        <path d="M50 4 C 42 24, 10 50, 10 76 a40 40 0 0 0 80 0 C 90 50, 58 24, 50 4 Z"
+              fill="url(#sdShine)"/>
+        <!-- Inner highlight ellipse -->
+        <ellipse cx="35" cy="52" rx="9" ry="15"
+                 fill="rgba(255,255,255,0.42)"
+                 transform="rotate(-22 35 52)"/>
+        <!-- Sparkle dot -->
+        <circle cx="65" cy="42" r="4" fill="rgba(255,255,255,0.55)"/>
+      </svg>
     </div>
   </div>
+
   <div id="stage">
     <div id="bubble-wrap">
       <div id="bubble" data-interactive>

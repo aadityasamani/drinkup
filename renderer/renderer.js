@@ -62,36 +62,37 @@ function chime() {
 }
 
 // ---- splash animation ----
-// Plays the water-drop splash overlay, then calls `onDone` when the
-// overlay has faded out and the avatar should enter.
-const SPLASH_IN_MS   = 500;   // scrim + card fade-in
-const SPLASH_HOLD_MS = 1800;  // card stays visible (wave fills, text reads)
-const SPLASH_OUT_MS  = 500;   // fade-out duration
+// A water drop falls from the top of the screen, squash-bounces at center,
+// then gravity-pulls it off the bottom. onDone fires as it starts exiting.
+
+const SPLASH_TOTAL_MS  = 2900; // full animation duration (matches CSS)
+const SPLASH_IMPACT_MS = 1160; // 40% of 2900 — when drop hits center
+const SPLASH_DONE_MS   = 2450; // call onDone as drop starts falling away
+
+const sdContainer = document.getElementById('sd-container');
+const sdRipple    = document.getElementById('sd-ripple');
 
 function runSplash(onDone) {
-  // Reset animation state
-  splashOverlay.classList.remove('animate-in', 'animate-out');
+  // Reset state
+  sdContainer.classList.remove('go');
+  sdRipple.classList.remove('pop');
   splashOverlay.classList.add('active');
 
-  // Force reflow so the animation restarts cleanly
-  void splashOverlay.offsetWidth;
-  splashOverlay.classList.add('animate-in');
+  void sdContainer.offsetWidth; // force reflow so animation restarts
+  sdContainer.classList.add('go');
 
-  // After hold period, start fading out; call onDone mid-fade so the
-  // avatar walk-in overlaps with the tail of the fade-out.
+  // Fire the impact ripple when the drop hits center
+  later(() => sdRipple.classList.add('pop'), SPLASH_IMPACT_MS);
+
+  // Start the avatar walk-in
+  later(onDone, SPLASH_DONE_MS);
+
+  // Clean up after animation fully completes
   later(() => {
-    splashOverlay.classList.remove('animate-in');
-    void splashOverlay.offsetWidth;
-    splashOverlay.classList.add('animate-out');
-
-    // Start avatar walk-in 200 ms into the fade-out (feels seamless)
-    later(onDone, 200);
-
-    // Clean up overlay after fade-out finishes
-    later(() => {
-      splashOverlay.classList.remove('active', 'animate-out');
-    }, SPLASH_OUT_MS);
-  }, SPLASH_IN_MS + SPLASH_HOLD_MS);
+    splashOverlay.classList.remove('active');
+    sdContainer.classList.remove('go');
+    sdRipple.classList.remove('pop');
+  }, SPLASH_TOTAL_MS + 100);
 }
 
 function showReminder(data) {

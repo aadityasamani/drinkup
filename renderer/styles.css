@@ -250,8 +250,8 @@ button {
 }
 
 /* =========================================================
-   SPLASH OVERLAY — premium centered notification
-   Inspired by macOS charging screen. Shown before avatar walks in.
+   SPLASH — physics water-drop animation
+   Falls from top → squash+bounce at center → exits bottom
    ========================================================= */
 
 #splash-overlay {
@@ -261,168 +261,108 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: transparent; /* no scrim — just the drop */
   pointer-events: none;
-
-  /* Subtle dark scrim — like iOS/macOS notifications */
-  background: rgba(8, 18, 36, 0.55);
-  backdrop-filter: blur(18px) saturate(1.4);
-  -webkit-backdrop-filter: blur(18px) saturate(1.4);
-
-  /* Hidden by default */
-  opacity: 0;
   visibility: hidden;
 }
-
 #splash-overlay.active {
   visibility: visible;
 }
 
-/* Fade + scale in */
-#splash-overlay.animate-in {
-  animation: splashIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
+/* ---------- drop container (handles gravity arc) ---------- */
 
-/* Fade + scale out */
-#splash-overlay.animate-out {
-  animation: splashOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-/* ---------- halo rings — pulse behind the card ---------- */
-
-.splash-halo {
-  position: absolute;
-  border-radius: 50%;
-  border: 1px solid rgba(96, 200, 255, 0.18);
-  pointer-events: none;
-}
-
-.h1 {
-  width: 260px;
-  height: 260px;
-  animation: haloExpand 2.4s cubic-bezier(0.2, 0.8, 0.3, 1) 0.3s infinite;
-}
-
-.h2 {
-  width: 260px;
-  height: 260px;
-  animation: haloExpand 2.4s cubic-bezier(0.2, 0.8, 0.3, 1) 1.0s infinite;
-}
-
-/* ---------- notification card ---------- */
-
-#splash-card {
+#sd-container {
   position: relative;
-  z-index: 2;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 18px;
-  padding: 36px 44px 32px;
-  border-radius: 28px;
-
-  /* Frosted glass pill — the hero element */
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow:
-    0 32px 80px rgba(0, 0, 0, 0.5),
-    0 8px 24px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.12),
-    0 0 0 0.5px rgba(255, 255, 255, 0.05);
-
-  animation: cardPop 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) 0.1s both;
+  justify-content: center;
+  /* Starts above the viewport — animation moves it */
+  transform: translateY(-62vh);
+  opacity: 0;
 }
 
-/* ---------- water drop ---------- */
-
-#splash-drop-wrap {
-  position: relative;
-  width: 90px;
-  height: 108px;
+#sd-container.go {
+  animation: sdFall 2.9s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-#splash-drop-svg {
-  width: 90px;
-  height: 108px;
+/* ---------- SVG drop (handles squash & stretch) ---------- */
+
+#sd-svg {
+  width: 130px;
+  height: 156px;
+  display: block;
   filter:
-    drop-shadow(0 0 20px rgba(96, 200, 255, 0.6))
-    drop-shadow(0 8px 24px rgba(26, 114, 217, 0.45));
-  animation: dropFloat 3s ease-in-out 0.6s infinite;
+    drop-shadow(0 20px 50px rgba(18, 85, 184, 0.8))
+    drop-shadow(0 0  80px rgba(74, 184, 255, 0.55))
+    drop-shadow(0 0 140px rgba(74, 184, 255, 0.25));
   overflow: visible;
 }
 
-/* The wave path rises from the bottom of the drop */
-#sd-wave {
-  animation: waveRise 1.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.35s both,
-             waveSway 3.5s ease-in-out 2s infinite;
+#sd-container.go #sd-svg {
+  animation: sdSquash 2.9s ease forwards;
 }
 
-/* ---------- text labels ---------- */
+/* ---------- impact ripple — ellipse at "landing" ---------- */
 
-#splash-label {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: rgba(255, 255, 255, 0.95);
-  text-align: center;
-  line-height: 1.2;
-  margin: 0;
+#sd-ripple {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  width: 130px;
+  height: 26px;
+  border-radius: 50%;
+  transform: translateX(-50%) scale(0);
+  opacity: 0;
+  background: radial-gradient(ellipse at center,
+    rgba(74, 184, 255, 0.7)  0%,
+    rgba(74, 184, 255, 0.25) 45%,
+    transparent 70%);
 }
-
-#splash-sub {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-  font-size: 13px;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.48);
-  text-align: center;
-  margin: -10px 0 0;
-  letter-spacing: 0.01em;
+#sd-ripple.pop {
+  animation: ripplePop 0.65s ease-out forwards;
 }
 
 /* ---------- keyframes ---------- */
 
-@keyframes splashIn {
-  from {
-    opacity: 0;
-    backdrop-filter: blur(0px);
-    -webkit-backdrop-filter: blur(0px);
-  }
-  to {
-    opacity: 1;
-    backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
-  }
+/*
+  Timeline (2.9 s total):
+    0%    → above screen, invisible
+    4%    → visible
+    40%   → lands at center (squash)
+    52%   → bounces up
+    63%   → comes back down (settle)
+    70%   → 2nd micro-bounce up
+    76%   → settles at center, fully formed
+    84%   → starts exit wind-up
+    100%  → off bottom, faded
+*/
+
+@keyframes sdFall {
+  0%   { transform: translateY(-62vh); opacity: 0; }
+  4%   { opacity: 1; }
+  40%  { transform: translateY(0);      opacity: 1; } /* lands */
+  52%  { transform: translateY(-9vh);   opacity: 1; } /* bounces up */
+  63%  { transform: translateY(1.5vh);  opacity: 1; } /* settles */
+  70%  { transform: translateY(-3vh);   opacity: 1; } /* micro-bounce */
+  76%  { transform: translateY(0);      opacity: 1; } /* fully rested */
+  84%  { transform: translateY(0);      opacity: 1; } /* hold */
+  88%  { transform: translateY(4vh);    opacity: 1; } /* wind-up for exit */
+  100% { transform: translateY(78vh);   opacity: 0; } /* exits bottom */
 }
 
-@keyframes splashOut {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+@keyframes sdSquash {
+  0%   { transform: scale(1); }
+  40%  { transform: scaleX(1.35) scaleY(0.65); } /* hard squash on impact */
+  52%  { transform: scaleX(0.84) scaleY(1.16); } /* tall stretch on bounce */
+  63%  { transform: scaleX(1.07) scaleY(0.95); } /* settle overshoot */
+  70%  { transform: scaleX(0.96) scaleY(1.03); } /* micro stretch */
+  76%  { transform: scale(1);                   } /* fully settled */
+  84%  { transform: scale(1);                   } /* hold */
+  88%  { transform: scaleX(1.14) scaleY(0.88); } /* squeeze for exit */
+  100% { transform: scale(0.35);                } /* tiny as it falls away */
 }
 
-@keyframes cardPop {
-  from { transform: scale(0.82) translateY(12px); opacity: 0; }
-  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+@keyframes ripplePop {
+  0%   { transform: translateX(-50%) scale(0.15); opacity: 0.95; }
+  100% { transform: translateX(-50%) scale(4);    opacity: 0; }
 }
-
-@keyframes haloExpand {
-  0%   { transform: scale(1);   opacity: 0.55; }
-  100% { transform: scale(2.1); opacity: 0; }
-}
-
-@keyframes dropFloat {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-6px); }
-}
-
-/* Wave rises from y=95 → y=40 (fills ~60% of the drop) */
-@keyframes waveRise {
-  from { transform: translateY(0); }
-  to   { transform: translateY(-55px); }
-}
-
-/* Gentle side-to-side wave sway after fill */
-@keyframes waveSway {
-  0%, 100% { transform: translateY(-55px) translateX(0); }
-  50%       { transform: translateY(-55px) translateX(-14px); }
-}
-
