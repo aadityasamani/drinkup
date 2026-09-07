@@ -1,7 +1,7 @@
 {
   "name": "drinkup",
   "productName": "DrinkUp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A friendly desktop buddy that walks across your screen to remind you to drink water",
   "private": true,
   "license": "MIT",
