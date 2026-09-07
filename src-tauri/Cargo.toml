@@ -19,3 +19,5 @@ tokio = { version = "1", features = ["time"] }
 png = "0.17"
 uuid = { version = "1.10", features = ["v4"] }
 base64 = "0.22"
+tauri-plugin-single-instance = "2"
+winreg = "0.52"

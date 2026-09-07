@@ -10,6 +10,11 @@ const INTERVALS = [
 ];
 
 const grid = document.getElementById('interval-grid');
+const customWrap = document.querySelector('.custom-interval-wrap');
+const customInput = document.getElementById('custom-interval-input');
+const customApplyBtn = document.getElementById('custom-apply-btn');
+const autostartToggle = document.getElementById('autostart-toggle');
+const autostartSub = document.getElementById('autostart-sub');
 const avatarGrid = document.getElementById('avatar-grid');
 const statusLabel = document.getElementById('status-label');
 const statusSub   = document.getElementById('status-sub');
@@ -33,6 +38,8 @@ let isDark = false;
 function fmtMin(m) {
   if (m === 1) return '1 minute';
   if (m === 60) return '1 hour';
+  if (m === 120) return '2 hours';
+  if (m % 60 === 0) return (m / 60) + ' hours';
   return m + ' minutes';
 }
 
@@ -77,14 +84,49 @@ function updateThemeUI() {
 
 function buildGrid() {
   grid.innerHTML = '';
+  const isPreset = INTERVALS.some(i => i.min === currentInterval);
   INTERVALS.forEach(({ min, num, label, test }) => {
     const chip = document.createElement('div');
     chip.className = 'chip' + (min === currentInterval ? ' selected' : '');
     if (test) chip.classList.add('chip-test');
     chip.dataset.minutes = min;
     chip.innerHTML = '<div class="chip-num">' + num + '</div><div class="chip-label">' + (test ? 'testing' : label) + '</div>';
-    chip.addEventListener('click', () => pickInterval(min));
+    chip.addEventListener('click', () => {
+      if (customInput) customInput.value = '';
+      if (customWrap) customWrap.classList.remove('active');
+      pickInterval(min);
+    });
     grid.appendChild(chip);
+  });
+
+  if (!isPreset && currentInterval >= 1 && currentInterval <= 120) {
+    if (customInput) customInput.value = currentInterval;
+    if (customWrap) customWrap.classList.add('active');
+  } else {
+    if (customWrap) customWrap.classList.remove('active');
+  }
+}
+
+function applyCustomInterval() {
+  if (!customInput) return;
+  const val = parseInt(customInput.value, 10);
+  if (isNaN(val) || val < 1 || val > 120) {
+    alert('Please enter an interval between 1 and 120 minutes (up to 2 hours).');
+    customInput.focus();
+    return;
+  }
+  pickInterval(val);
+}
+
+if (customApplyBtn) {
+  customApplyBtn.addEventListener('click', applyCustomInterval);
+}
+if (customInput) {
+  customInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      applyCustomInterval();
+    }
   });
 }
 
@@ -254,6 +296,21 @@ themeToggle.addEventListener('click', async () => {
   try { await tauri.core.invoke('set_dark_mode', { dark: isDark }); } catch (e) { console.error(e); }
 });
 
+/* ---------- autostart ---------- */
+
+if (autostartToggle) {
+  autostartToggle.addEventListener('change', async () => {
+    const enable = autostartToggle.checked;
+    try {
+      await tauri.core.invoke('set_autostart', { enabled: enable });
+    } catch (e) {
+      console.error(e);
+      autostartToggle.checked = !enable;
+      alert('Could not update startup setting: ' + e);
+    }
+  });
+}
+
 /* ---------- init ---------- */
 
 async function init() {
@@ -263,6 +320,19 @@ async function init() {
     currentAvatar = s.avatarId || 'drippy';
     isPaused = s.paused;
     isDark = s.darkMode;
+
+    if (autostartToggle) {
+      if (s.isDev) {
+        autostartToggle.disabled = true;
+        autostartToggle.checked = false;
+        if (autostartSub) {
+          autostartSub.textContent = 'Auto-startup is disabled in dev mode (active in installed build)';
+        }
+      } else {
+        autostartToggle.disabled = false;
+        autostartToggle.checked = !!s.autostart;
+      }
+    }
   } catch (e) { console.error(e); }
   buildGrid();
   await refreshAvatars();
