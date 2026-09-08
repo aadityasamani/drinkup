@@ -1,6 +1,6 @@
 [package]
 name = "drinkup"
-version = "0.1.0"
+version = "0.1.1"
 description = "A friendly desktop buddy that reminds you to drink water"
 authors = ["Aaditya Samani"]
 edition = "2021"
@@ -19,3 +19,5 @@ tokio = { version = "1", features = ["time"] }
 png = "0.17"
 uuid = { version = "1.10", features = ["v4"] }
 base64 = "0.22"
+tauri-plugin-single-instance = "2"
+winreg = "0.52"

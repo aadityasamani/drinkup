@@ -49,6 +49,30 @@
       <section class="card">
         <h2 class="section-title">Remind me every</h2>
         <div class="interval-row" id="interval-grid"></div>
+        <div class="custom-interval-wrap">
+          <div class="custom-interval-inner">
+            <span class="custom-icon">&#9201;</span>
+            <span class="custom-label">Custom:</span>
+            <input type="number" id="custom-interval-input" min="1" max="120" placeholder="e.g. 20" />
+            <span class="custom-suffix">min</span>
+            <button type="button" class="btn-custom-apply" id="custom-apply-btn">Set</button>
+          </div>
+          <span class="custom-help">1 to 120 minutes</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="section-title">System</h2>
+        <div class="toggle-row">
+          <div class="toggle-info">
+            <span class="toggle-title">Start with Windows</span>
+            <span class="toggle-sub" id="autostart-sub">Launch DrinkUp in the background on startup</span>
+          </div>
+          <label class="switch" id="autostart-switch">
+            <input type="checkbox" id="autostart-toggle" />
+            <span class="slider"></span>
+          </label>
+        </div>
       </section>
 
       <section class="card">
@@ -70,7 +94,7 @@
       </div>
 
       <footer class="foot">
-        v0.1.0
+        v0.1.1
       </footer>
     </main>
   </div>

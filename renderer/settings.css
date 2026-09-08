@@ -86,6 +86,26 @@ body.dark .status-card::before {
   background: var(--green);
 }
 
+body.dark .custom-interval-wrap {
+  background: #131620;
+  border-color: var(--border);
+}
+
+body.dark .custom-interval-wrap.active {
+  background: rgba(59, 130, 246, .12);
+  border-color: var(--blue-500);
+}
+
+body.dark #custom-interval-input {
+  background: #0f1117;
+  color: var(--text);
+  border-color: var(--border);
+}
+
+body.dark .slider {
+  background: #2a2f3d;
+}
+
 
 
 .app {
@@ -325,6 +345,154 @@ body.dark .status-card::before {
 .chip.selected .chip-label { opacity: .85; }
 .chip-test .chip-num { color: var(--text-muted); }
 .chip-test .chip-label { color: var(--text-muted); }
+
+/* ---------- custom interval ---------- */
+
+.custom-interval-wrap {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1.5px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all .2s ease;
+}
+.custom-interval-wrap.active {
+  border-color: var(--blue-400);
+  background: var(--blue-50);
+}
+.custom-interval-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.custom-icon {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+.custom-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+#custom-interval-input {
+  width: 68px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  outline: none;
+  transition: border-color .15s ease;
+}
+#custom-interval-input:focus {
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, .15);
+}
+.custom-suffix {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.btn-custom-apply {
+  padding: 6px 14px;
+  border: 1.5px solid var(--blue-500);
+  border-radius: 8px;
+  background: var(--blue-500);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .15s ease;
+}
+.btn-custom-apply:hover {
+  background: var(--blue-600);
+  border-color: var(--blue-600);
+  transform: translateY(-1px);
+}
+.btn-custom-apply:active {
+  transform: scale(.96);
+}
+.custom-help {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* ---------- toggle switch ---------- */
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.toggle-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.toggle-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+.toggle-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--border);
+  transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 24px;
+}
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: all .25s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,.15);
+}
+.switch input:checked + .slider {
+  background-color: var(--blue-500);
+}
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+.switch input:disabled + .slider {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 
 /* ---------- avatar grid ---------- */
 

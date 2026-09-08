@@ -51,6 +51,50 @@ struct AppState {
     generation: AtomicU64,
 }
 
+// ---------- autostart (Windows registry) ----------
+
+#[cfg(target_os = "windows")]
+const RUN_KEY: &str = r"Software\Microsoft\Windows\CurrentVersion\Run";
+#[cfg(target_os = "windows")]
+const APP_NAME: &str = "DrinkUp";
+
+fn is_autostart_enabled() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        use winreg::enums::HKEY_CURRENT_USER;
+        use winreg::RegKey;
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        if let Ok(key) = hkcu.open_subkey(RUN_KEY) {
+            let val: Result<String, _> = key.get_value(APP_NAME);
+            return val.is_ok();
+        }
+    }
+    false
+}
+
+fn set_autostart_registry(enabled: bool) -> Result<(), String> {
+    #[cfg(target_os = "windows")]
+    {
+        use winreg::enums::HKEY_CURRENT_USER;
+        use winreg::RegKey;
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let (key, _) = hkcu.create_subkey(RUN_KEY).map_err(|e| e.to_string())?;
+        if enabled {
+            let exe = std::env::current_exe().map_err(|e| e.to_string())?;
+            let cmd = format!("\"{}\" --autostart", exe.to_string_lossy());
+            key.set_value(APP_NAME, &cmd).map_err(|e| e.to_string())?;
+        } else {
+            let _ = key.delete_value(APP_NAME);
+        }
+        Ok(())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = enabled;
+        Ok(())
+    }
+}
+
 // ---------- settings persistence ----------
 
 fn settings_path(app: &AppHandle) -> std::path::PathBuf {
@@ -185,11 +229,13 @@ fn set_walk_mode(w: &tauri::WebviewWindow) {
         let _ = w.set_size(tauri::PhysicalSize::new(win_w, WIN_HEIGHT));
     }
     let _ = w.set_ignore_cursor_events(true);
+    let _ = w.set_always_on_top(true);
 }
 
-// Just toggle click-through off — window stays in place.
+// Just toggle click-through off — window stays in place and always on top.
 fn set_interactive_mode(w: &tauri::WebviewWindow) {
     let _ = w.set_ignore_cursor_events(false);
+    let _ = w.set_always_on_top(true);
 }
 
 fn show_reminder(app: &AppHandle, demo: bool) {
@@ -232,11 +278,15 @@ fn show_reminder(app: &AppHandle, demo: bool) {
     if let Some(w) = app.get_webview_window("main") {
         // 1. Position the window off-screen correctly.
         set_walk_mode(&w);
-        // 2. Show the window so it is visible when the event fires.
+        // 2. Set always on top before showing.
+        let _ = w.set_always_on_top(true);
+        // 3. Show the window so it is visible when the event fires.
         let _ = w.show();
+        // 4. Re-assert always_on_top after show so Windows puts it on topmost Z-order.
+        let _ = w.set_always_on_top(true);
     }
 
-    // 3. Give the OS one frame (~17 ms) to composite the window at its new
+    // 5. Give the OS one frame (~17 ms) to composite the window at its new
     //    position, then fire the event so JS animates into an already-visible,
     //    correctly-placed window.
     let app2 = app.clone();
@@ -298,6 +348,8 @@ fn interval_label(min: u64) -> String {
     match min {
         1 => "1 minute".to_string(),
         60 => "1 hour".to_string(),
+        120 => "2 hours".to_string(),
+        n if n % 60 == 0 => format!("{} hours", n / 60),
         n => format!("{n} minutes"),
     }
 }
@@ -350,9 +402,7 @@ fn open_settings_window(app: &AppHandle) {
     let Some(w) = app.get_webview_window("settings") else {
         return;
     };
-    // Force a fresh start: hide first, center, then show.
-    let _ = w.hide();
-    let _ = w.center();
+    let _ = w.unminimize();
     let _ = w.show();
     let _ = w.set_focus();
     // Retry once after a short delay — Windows can silently drop the first show().
@@ -360,6 +410,7 @@ fn open_settings_window(app: &AppHandle) {
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(Duration::from_millis(120)).await;
         if let Some(w) = handle.get_webview_window("settings") {
+            let _ = w.unminimize();
             let _ = w.show();
             let _ = w.set_focus();
         }
@@ -425,6 +476,9 @@ struct SettingsDto {
     paused: bool,
     #[serde(rename = "darkMode")]
     dark_mode: bool,
+    autostart: bool,
+    #[serde(rename = "isDev")]
+    is_dev: bool,
 }
 
 #[tauri::command]
@@ -449,11 +503,14 @@ fn get_settings(app: AppHandle) -> SettingsDto {
         avatar_id: s.avatar_id,
         paused,
         dark_mode: s.dark_mode,
+        autostart: is_autostart_enabled(),
+        is_dev: cfg!(debug_assertions),
     }
 }
 
 #[tauri::command]
 fn set_interval(app: AppHandle, minutes: u64) {
+    let minutes = minutes.clamp(1, 120);
     {
         let state = app.state::<AppState>();
         state.settings.lock().unwrap().interval_min = minutes;
@@ -461,6 +518,16 @@ fn set_interval(app: AppHandle, minutes: u64) {
     save_settings(&app);
     refresh_menu(&app);
     schedule(&app);
+}
+
+#[tauri::command]
+fn get_autostart() -> bool {
+    is_autostart_enabled()
+}
+
+#[tauri::command]
+fn set_autostart(enabled: bool) -> Result<(), String> {
+    set_autostart_registry(enabled)
 }
 
 #[tauri::command]
@@ -611,6 +678,9 @@ fn set_dark_mode(app: AppHandle, dark: bool) {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            open_settings_window(app);
+        }))
         .manage(AppState {
             settings: Mutex::new(Settings::default()),
             paused: Mutex::new(false),
@@ -627,19 +697,25 @@ pub fn run() {
                 *state.settings.lock().unwrap() = loaded;
             }
 
-            // (theme is sent as part of each show-reminder payload instead,
-            //  since this emit fires before the webview JS has loaded.)
-
-            // Size and hide the overlay window. The webview warms up lazily;
-            // the #stage opacity:0 CSS guard ensures nothing flashes on first show.
+            // Size and hide the overlay window.
             if let Some(w) = app.get_webview_window("main") {
                 set_walk_mode(&w);
                 let _ = w.hide();
             }
 
-            // Create the settings window (hidden by default).
+            // Prepare settings window.
             if let Some(w) = app.get_webview_window("settings") {
                 let _ = w.hide();
+            }
+
+            // Check if app was started with --autostart (e.g. on Windows system boot).
+            // If started manually (no --autostart flag), show the settings window so
+            // the user sees the application UI immediately upon clicking it!
+            let is_autostart = std::env::args().any(|arg| {
+                arg == "--autostart" || arg == "--minimized" || arg == "--silent"
+            });
+            if !is_autostart {
+                open_settings_window(&handle);
             }
 
             // Tray icon.
@@ -674,6 +750,10 @@ pub fn run() {
             };
             if first_run {
                 save_settings(&handle);
+                // On first run in release builds, enable autostart by default
+                if !cfg!(debug_assertions) {
+                    let _ = set_autostart_registry(true);
+                }
                 tauri::async_runtime::spawn(async move {
                     tokio::time::sleep(Duration::from_secs(6)).await;
                     show_reminder(&handle, true);
@@ -691,6 +771,8 @@ pub fn run() {
             close_settings,
             get_settings,
             set_interval,
+            get_autostart,
+            set_autostart,
             toggle_pause,
             remind_now,
             get_avatar_list,
@@ -712,3 +794,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running Water Reminder");
 }
+

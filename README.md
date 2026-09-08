@@ -8,9 +8,9 @@ Your animated buddy lives in the system tray, walks across your screen at your c
 
 ## Download
 
-**[⬇ DrinkUp_0.1.0_x64-setup.exe](https://github.com/aadityasamani/drinkup/releases/latest)**
+**[⬇ DrinkUp_0.1.1_x64-setup.exe](https://github.com/aadityasamani/drinkup/releases/latest)**
 
-Windows 10 / 11 · x64 · ~4 MB installer
+Windows 10 / 11 · x64 · ~2 MB installer
 
 ---
 
@@ -28,8 +28,9 @@ The overlay is **click-through everywhere except the bubble**, so it never block
 |---|---|
 | 🎭 | **Your character** — use the built-in mascot or upload any PNG as your own avatar |
 | 🌙 | **Dark mode** — toggle live in settings, remembered on restart |
-| ⏱️ | **Flexible intervals** — 15 · 30 · 45 min · 1 hr · 90 min |
-| 🖱️ | **Non-intrusive** — click-through overlay, never steals focus |
+| ⏱️ | **Custom intervals** — presets (15 · 30 · 45 min · 1 hr · 90 min) or any custom timer up to 2 hours |
+| 🚀 | **Auto-startup** — seamlessly launches in the background tray on Windows login |
+| 🖱️ | **Non-intrusive** — click-through overlay, stays on top without stealing keyboard focus |
 | 🔔 | **Gentle chime** — a soft audio cue when the reminder appears |
 | ⏸️ | **Pause / Resume** — snooze all reminders when you need deep focus |
 | 🗂️ | **Tray-first** — closing the window keeps it running; only Quit exits |
