@@ -2,7 +2,7 @@
 
 **A tiny desktop app that reminds you to drink water — without getting in your way.**
 
-Your animated buddy lives in the system tray, walks across your screen at your chosen interval, drops a nudge, and disappears. No bloat. No subscriptions. Just one `.exe`.
+Your animated buddy lives in the system tray, splashes onto your screen at your chosen interval, drops a nudge, and disappears. No bloat. No subscriptions. Just one `.exe`.
 
 ---
 
@@ -16,7 +16,7 @@ Windows 10 / 11 · x64 · ~2 MB installer
 
 ## What it does
 
-At whatever interval you set, your buddy strolls in from the corner of your screen, pops up a friendly message, and waits for you to click **Done ✓ I drank** or **skip** — then walks off. That's it.
+At whatever interval you set, a water drop falls into the corner of your screen, splashes, and your buddy springs out of it with a nudge. Click **i drank 💦** or **not rn** and it dives back into the splash. That's it.
 
 The overlay is **click-through everywhere except the bubble**, so it never blocks your work, your cursor, or your games.
 
@@ -53,11 +53,11 @@ Right-click the tray icon → **Open Settings**, or double-click it.
 
 ```
 Timer fires
-  → Transparent overlay appears at the bottom-right corner of your screen
-  → Your buddy walks in with a little animation
-  → Speech bubble slides in with a hydration nudge
-  → You click Done or Skip
-  → Buddy waves and walks back off
+  → Transparent overlay appears at the bottom-right corner of the screen you're on
+  → A drop falls, splashes, and your buddy springs out of the splash
+  → A sticker-style bubble slaps on with a hydration nudge
+  → You click "i drank" or "not rn"
+  → Buddy hops and dives back into the splash
   → Timer resets
 ```
 
@@ -68,7 +68,7 @@ Settings are saved to `%APPDATA%\dev.aaditya.drinkup\settings.json`.
 ## Roadmap
 
 - [ ] macOS + Linux support
-- [ ] Autostart on login
+- [x] Autostart on login
 - [ ] Quiet hours / Do Not Disturb schedule
 - [ ] More avatar animations and moods
 - [ ] Daily hydration goal tracking
