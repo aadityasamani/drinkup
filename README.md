@@ -4,6 +4,13 @@
 
 Your animated buddy lives in the system tray, splashes onto your screen at your chosen interval, drops a nudge, and disappears. No bloat. No subscriptions. Just one `.exe`.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/reminder-dark.png">
+    <img src="docs/images/reminder-light.png" alt="A DrinkUp reminder: Drippy next to a blue sticker-style bubble that says “water break, bestie” with “i drank” and “not rn” buttons" width="425">
+  </picture>
+</p>
+
 ---
 
 ## Download
@@ -18,7 +25,7 @@ Windows 10 / 11 · x64 · ~2 MB installer
 
 At whatever interval you set, a water drop falls into the corner of your screen, splashes, and your buddy springs out of it with a nudge. Click **i drank 💦** or **not rn** and it dives back into the splash. That's it.
 
-The overlay is **click-through everywhere except the bubble**, so it never blocks your work, your cursor, or your games.
+It shows up above whatever you're doing, on the screen you're using. Clicks pass straight through while your buddy splashes in and out; while the bubble is up, only that corner of the screen takes clicks.
 
 ---
 
@@ -26,12 +33,13 @@ The overlay is **click-through everywhere except the bubble**, so it never block
 
 | | |
 |---|---|
+| 💦 | **Splash-in reminders** — a drop lands, your buddy pops out with a sticker-style nudge, then dives back in |
 | 🎭 | **Your character** — use the built-in mascot or upload any PNG as your own avatar |
 | 🌙 | **Dark mode** — toggle live in settings, remembered on restart |
 | ⏱️ | **Custom intervals** — presets (15 · 30 · 45 min · 1 hr · 90 min) or any custom timer up to 2 hours |
 | 🚀 | **Auto-startup** — seamlessly launches in the background tray on Windows login |
-| 🖱️ | **Non-intrusive** — click-through overlay, stays on top without stealing keyboard focus |
-| 🔔 | **Gentle chime** — a soft audio cue when the reminder appears |
+| 📌 | **Always on top** — shows above your apps, even other always-on-top windows, on the screen you're using |
+| 🔔 | **Soft sounds** — a water-drop plip on the splash and a gentle chime when the bubble appears |
 | ⏸️ | **Pause / Resume** — snooze all reminders when you need deep focus |
 | 🗂️ | **Tray-first** — closing the window keeps it running; only Quit exits |
 
