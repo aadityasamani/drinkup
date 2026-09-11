@@ -1,6 +1,6 @@
 [package]
 name = "drinkup"
-version = "0.1.1"
+version = "0.2.0"
 description = "A friendly desktop buddy that reminds you to drink water"
 authors = ["Aaditya Samani"]
 edition = "2021"

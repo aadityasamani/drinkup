@@ -825,7 +825,7 @@ dependencies = [
 
 [[package]]
 name = "drinkup"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "base64 0.22.1",
  "png 0.17.16",

@@ -59,6 +59,7 @@ function fmtInterval(m) {
 
 // ---------- sound ----------
 
+let soundEnabled = true;
 let audioCtx = null;
 function audio() {
   try {
@@ -69,6 +70,7 @@ function audio() {
 }
 
 function chime() {
+  if (!soundEnabled) return;
   const ctx = audio();
   if (!ctx) return;
   const t0 = ctx.currentTime;
@@ -88,6 +90,7 @@ function chime() {
 
 // A water-drop "plip": a short sine blip with a fast upward pitch sweep.
 function plip() {
+  if (!soundEnabled) return;
   const ctx = audio();
   if (!ctx) return;
   const t0 = ctx.currentTime;
@@ -193,11 +196,22 @@ function showReminder(data) {
   clearTimers();
   clearEffects();
   reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (data.sound !== undefined) {
+    soundEnabled = Boolean(data.sound);
+  }
   const avatar = data.avatar || {};
   customActive = Boolean(avatar.url);
   // Always sync theme from payload — this is the authoritative source since
   // the theme-changed boot event fires before JS has loaded.
-  darkMode = Boolean(data.darkMode);
+  if (data.theme === 'dark') {
+    darkMode = true;
+  } else if (data.theme === 'light') {
+    darkMode = false;
+  } else if (data.theme === 'system') {
+    darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } else {
+    darkMode = Boolean(data.darkMode);
+  }
 
   const who = avatar.name || 'Drippy';
   const [headline, sub] = data.demo
@@ -248,15 +262,25 @@ skipBtn.addEventListener('click', () => respond('skip'));
 tauri.event.listen('show-reminder', (e) => showReminder(e.payload));
 
 tauri.event.listen('theme-changed', (e) => {
-  darkMode = Boolean(e.payload);
+  if (typeof e.payload === 'string') {
+    if (e.payload === 'dark') darkMode = true;
+    else if (e.payload === 'light') darkMode = false;
+    else darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } else {
+    darkMode = Boolean(e.payload);
+  }
   setState(currentState);
 });
 
-// Initialize dark mode on load so the variable is correct if the
-// reminder fires before a theme-changed event is received.
+// Initialize dark mode and sound on load so variables are correct if the
+// reminder fires before events are received.
 (async () => {
   try {
     const s = await tauri.core.invoke('get_settings');
-    darkMode = Boolean(s.darkMode);
+    if (s.theme === 'dark') darkMode = true;
+    else if (s.theme === 'light') darkMode = false;
+    else if (s.theme === 'system') darkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    else darkMode = Boolean(s.darkMode);
+    if (s.sound !== undefined) soundEnabled = Boolean(s.sound);
   } catch (e) {}
 })();
