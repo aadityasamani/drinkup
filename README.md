@@ -2,13 +2,20 @@
 
 **A tiny desktop app that reminds you to drink water — without getting in your way.**
 
-Your animated buddy lives in the system tray, walks across your screen at your chosen interval, drops a nudge, and disappears. No bloat. No subscriptions. Just one `.exe`.
+Your animated buddy lives in the system tray, splashes onto your screen at your chosen interval, drops a nudge, and disappears. No bloat. No subscriptions. Just one `.exe`.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/reminder-dark.png">
+    <img src="docs/images/reminder-light.png" alt="A DrinkUp reminder: Drippy next to a blue sticker-style bubble that says “water break, bestie” with “i drank” and “not rn” buttons" width="425">
+  </picture>
+</p>
 
 ---
 
 ## Download
 
-**[⬇ DrinkUp_0.1.1_x64-setup.exe](https://github.com/aadityasamani/drinkup/releases/latest)**
+**[⬇ DrinkUp_0.2.0_x64-setup.exe](https://github.com/aadityasamani/drinkup/releases/latest)**
 
 Windows 10 / 11 · x64 · ~2 MB installer
 
@@ -16,9 +23,9 @@ Windows 10 / 11 · x64 · ~2 MB installer
 
 ## What it does
 
-At whatever interval you set, your buddy strolls in from the corner of your screen, pops up a friendly message, and waits for you to click **Done ✓ I drank** or **skip** — then walks off. That's it.
+At whatever interval you set, a water drop falls into the corner of your screen, splashes, and your buddy springs out of it with a nudge. Click **i drank 💦** or **not rn** and it dives back into the splash. That's it.
 
-The overlay is **click-through everywhere except the bubble**, so it never blocks your work, your cursor, or your games.
+It shows up above whatever you're doing, on the screen you're using. Clicks pass straight through while your buddy splashes in and out; while the bubble is up, only that corner of the screen takes clicks.
 
 ---
 
@@ -26,13 +33,14 @@ The overlay is **click-through everywhere except the bubble**, so it never block
 
 | | |
 |---|---|
-| 🎭 | **Your character** — use the built-in mascot or upload any PNG as your own avatar |
-| 🌙 | **Dark mode** — toggle live in settings, remembered on restart |
-| ⏱️ | **Custom intervals** — presets (15 · 30 · 45 min · 1 hr · 90 min) or any custom timer up to 2 hours |
+| 💦 | **Splash-in reminders** — a drop lands, your buddy pops out with a sticker-style nudge, then dives back in |
+| ⏱️ | **Live countdown & intervals** — hero sticker shows when the next sip lands; presets or custom timer up to 2 hours |
+| 🎭 | **Your character** — use the built-in mascot or upload any PNG as your own avatar with inline rename and delete |
+| 🌙 | **Theme options** — Light, Dark, or Match Windows (system), with synced native title bar |
 | 🚀 | **Auto-startup** — seamlessly launches in the background tray on Windows login |
-| 🖱️ | **Non-intrusive** — click-through overlay, stays on top without stealing keyboard focus |
-| 🔔 | **Gentle chime** — a soft audio cue when the reminder appears |
-| ⏸️ | **Pause / Resume** — snooze all reminders when you need deep focus |
+| 📌 | **Always on top** — shows above your apps, even other always-on-top windows, on the screen you're using |
+| 🔔 | **Soft sounds** — a water-drop plip and gentle chime, with a mute toggle in preferences |
+| ⏸️ | **Pause / Resume** — snooze all reminders from the tray or settings when you need deep focus |
 | 🗂️ | **Tray-first** — closing the window keeps it running; only Quit exits |
 
 ---
@@ -41,11 +49,10 @@ The overlay is **click-through everywhere except the bubble**, so it never block
 
 Right-click the tray icon → **Open Settings**, or double-click it.
 
-- Pick your reminder interval — saved instantly
-- Swap the avatar: upload any PNG, rename or remove it anytime
-- Test a reminder before committing to an interval
-- Pause reminders when you need uninterrupted focus
-- Toggle dark / light mode live
+- **Hero sticker** — see exact countdown to your next reminder, test immediately, or pause
+- **Interval picker** — choose 15, 30, 45 min, 1 hr, 90 min, or custom stepper (1–120 min)
+- **Avatar sheet** — switch characters, add custom PNGs, rename, or remove with inline confirmation
+- **Preferences** — light / dark / match Windows theme, splash sound on/off, autostart toggle
 
 ---
 
@@ -53,11 +60,11 @@ Right-click the tray icon → **Open Settings**, or double-click it.
 
 ```
 Timer fires
-  → Transparent overlay appears at the bottom-right corner of your screen
-  → Your buddy walks in with a little animation
-  → Speech bubble slides in with a hydration nudge
-  → You click Done or Skip
-  → Buddy waves and walks back off
+  → Transparent overlay appears at the bottom-right corner of the screen you're on
+  → A drop falls, splashes, and your buddy springs out of the splash
+  → A sticker-style bubble slaps on with a hydration nudge
+  → You click "i drank" or "not rn"
+  → Buddy hops and dives back into the splash
   → Timer resets
 ```
 
@@ -68,7 +75,7 @@ Settings are saved to `%APPDATA%\dev.aaditya.drinkup\settings.json`.
 ## Roadmap
 
 - [ ] macOS + Linux support
-- [ ] Autostart on login
+- [x] Autostart on login
 - [ ] Quiet hours / Do Not Disturb schedule
 - [ ] More avatar animations and moods
 - [ ] Daily hydration goal tracking
@@ -92,7 +99,9 @@ npm run build   # Produces the NSIS installer
 drinkup/
 ├── renderer/          # Frontend — HTML, CSS, JS
 │   ├── index.html     # Reminder overlay
-│   ├── settings.html  # Settings window
+│   ├── settings.html  # Settings window (sticker sheet)
+│   ├── theme.css      # Shared design tokens & fonts
+│   ├── fonts/         # Bundled offline fonts (OFL)
 │   └── *.js / *.css
 └── src-tauri/
     ├── src/lib.rs     # All app logic (tray, windows, IPC)

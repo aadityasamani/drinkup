@@ -1,0 +1,8 @@
+SIL OPEN FONT LICENSE Version 1.1 - 26 February 2007
+
+This font software is licensed under the SIL Open Font License, Version 1.1.
+This license is available with a FAQ at: https://openfontlicense.org
+
+Fonts included:
+- Bricolage Grotesque by Mathieu Triay (Copyright 2023 The Bricolage Grotesque Project Authors)
+- Space Mono by Colophon Foundry (Copyright 2016 The Space Mono Project Authors)

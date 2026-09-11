@@ -1,0 +1,118 @@
+/* Shared typography and design tokens for DrinkUp */
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 500 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('fonts/bricolage-grotesque-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 500 800;
+  font-stretch: 100%;
+  font-display: swap;
+  src: url('fonts/bricolage-grotesque-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/spacemono-700-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Space Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('fonts/spacemono-700-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  /* Fonts */
+  --display: 'Bricolage Grotesque', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --label: 'Space Mono', 'Cascadia Mono', Consolas, monospace;
+
+  /* Base Light Theme Tokens */
+  --pool: #2a4df5;           /* hero sticker face, reminder face */
+  --die-cut: #ffffff;        /* sticker border */
+  --select: #2a4df5;         /* picked chip, theme segment, avatar ring */
+  --fizz: #d8ff3c;           /* primary button, switch on */
+  --fizz-edge: #0f1330;      /* keycap edge under primary buttons */
+  --bubblegum: #ff7ac6;      /* name tag only */
+  --sheet: #eef1fb;          /* window background */
+  --sheet-dot: #d5dbf0;      /* dot grid on the sheet */
+  --card: #ffffff;           /* section cards */
+  --line: #dce1f3;           /* borders and dividers */
+  --text: #0f1330;           /* primary text */
+  --muted: #5a6190;          /* secondary text */
+  --ink: #0f1330;            /* text on lime and pink */
+  --on-pool: #ffffff;
+  --on-pool-soft: rgba(255, 255, 255, .8);
+  --splash: rgba(47, 143, 224, .85);
+  --shadow-sheet: rgba(15, 19, 48, .08);
+}
+
+/* Dark Theme Tokens applied via .dark on html, body or #stage */
+:root.dark,
+html.dark,
+body.dark,
+#stage.dark {
+  --pool: #161c4f;
+  --die-cut: #2e3780;
+  --select: #2a4df5;
+  --fizz: #d8ff3c;
+  --fizz-edge: #5f7800;
+  --bubblegum: #ff7ac6;
+  --sheet: #080a1f;
+  --sheet-dot: #1a2150;
+  --card: #121840;
+  --line: #262d63;
+  --text: #eef1ff;
+  --muted: #9ca3d3;
+  --ink: #0f1330;
+  --on-pool: #ffffff;
+  --on-pool-soft: rgba(226, 231, 255, .72);
+  --splash: rgba(47, 143, 224, .85);
+  --shadow-sheet: rgba(0, 0, 0, .4);
+}
+
+/* Shared Keyframes */
+@keyframes slap {
+  0%   { opacity: 0; transform: translateY(-8px) rotate(-10deg) scale(1.2); animation-timing-function: cubic-bezier(.3,0,.6,1); }
+  45%  { opacity: 1; transform: translateY(0) rotate(.5deg) scale(.96); animation-timing-function: ease-out; }
+  72%  { transform: rotate(-2.4deg) scale(1.015); animation-timing-function: ease-in-out; }
+  100% { opacity: 1; transform: rotate(-1.5deg) scale(1); }
+}
+
+@keyframes tag-pop {
+  0%   { transform: rotate(-16deg) scale(0); }
+  70%  { transform: rotate(-3deg) scale(1.12); }
+  100% { transform: rotate(-5deg) scale(1); }
+}
+
+@keyframes chip-pop {
+  0%   { transform: scale(0.92); }
+  60%  { transform: scale(1.04); }
+  100% { transform: scale(1); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}

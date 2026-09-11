@@ -1,6 +1,21 @@
+@import 'theme.css';
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@600;700;800&display=swap');
+/* The bubble is a die-cut vinyl sticker — the kind that ends up on every water bottle. */
+:root {
+  --pool: #2a4df5;           /* sticker face */
+  --die-cut: #ffffff;        /* vinyl margin around the sticker */
+  --on-pool: #ffffff;
+  --on-pool-soft: rgba(255, 255, 255, .8);
+  --fizz: #d8ff3c;           /* primary action */
+  --fizz-edge: #0f1330;
+  --bubblegum: #ff7ac6;      /* name tag */
+  --ink: #0f1330;
+  --splash: rgba(47, 143, 224, .85);
+  --display: 'Bricolage Grotesque', 'Segoe UI Variable Display', 'Segoe UI', system-ui, sans-serif;
+  --label: 'Space Mono', 'Cascadia Mono', Consolas, monospace;
+}
 
 html, body {
   width: 100%;
@@ -9,7 +24,7 @@ html, body {
   background: transparent;
   user-select: none;
   -webkit-user-select: none;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--display);
 }
 
 #stage {
@@ -19,16 +34,15 @@ html, body {
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  gap: 10px;
-  padding: 0 16px 12px;
-  opacity: 0;
+  gap: 16px;
+  padding: 0 20px 14px;
+  visibility: hidden;
 }
-#stage.state-walk-in,
+#stage.state-enter,
 #stage.state-waiting,
 #stage.state-happy,
-#stage.state-walk-out {
-  opacity: 1;
-  transition: opacity 0.04s ease;
+#stage.state-exit {
+  visibility: visible;
 }
 
 /* ---------- the pet ---------- */
@@ -36,6 +50,9 @@ html, body {
 #pet {
   position: relative;
   flex-shrink: 0;
+}
+.spring {
+  transform-origin: 50% 100%;
   will-change: transform;
 }
 .bob { position: relative; }
@@ -65,40 +82,45 @@ html, body {
 
 /* ---------- states ---------- */
 
-#stage.state-walk-in #pet { animation: walk-in 2s cubic-bezier(.45,.05,.55,.95) forwards; }
-#stage.state-walk-in .bob { animation: bob .38s ease-in-out infinite; }
-#stage.state-walk-in .foot-l { animation: step .38s ease-in-out infinite; }
-#stage.state-walk-in .foot-r { animation: step .38s ease-in-out infinite reverse; }
-#stage.state-walk-in .pupil { transform: translateX(1.8px); }
+/* The spring-up delay lines up with the moment the falling drop hits the ground. */
+#stage.state-enter .spring { animation: spring-up .62s .36s both; }
+#stage.state-enter #shadow { animation: shadow-in .62s .36s both; }
 
 #stage.state-waiting .bob { animation: sway 2.6s ease-in-out infinite; }
 
-#stage.state-happy .bob { animation: hop .62s cubic-bezier(.3,.6,.4,1) 2; }
-#stage.state-happy .arm-r { animation: wave .62s ease-in-out 2; }
+#stage.state-happy .bob { animation: hop .62s cubic-bezier(.3,.6,.4,1); }
+#stage.state-happy .arm-r { animation: wave .62s ease-in-out; }
 
-#stage.state-walk-out #pet { animation: walk-out 2.3s cubic-bezier(.45,.05,.55,.95) forwards; }
-#stage.state-walk-out .bob { animation: bob .34s ease-in-out infinite; }
-#stage.state-walk-out .foot-l { animation: step .34s ease-in-out infinite; }
-#stage.state-walk-out .foot-r { animation: step .34s ease-in-out infinite reverse; }
-#stage.state-walk-out .pupil { transform: translateX(1.8px); }
+#stage.state-exit .spring { animation: dive-down .56s both; }
+#stage.state-exit #shadow { animation: shadow-out .56s both; }
 
 /* ---------- keyframes ---------- */
 
-@keyframes walk-in {
-  from { transform: translateX(100vw); }
-  to   { transform: translateX(0); }
+@keyframes spring-up {
+  0%   { transform: translateY(0) scale(1.5, .06); opacity: 0; animation-timing-function: cubic-bezier(.2,.7,.4,1); }
+  10%  { opacity: 1; }
+  40%  { transform: translateY(-30px) scale(.84, 1.2); animation-timing-function: cubic-bezier(.5,0,.8,.4); }
+  64%  { transform: translateY(0) scale(1.14, .86); animation-timing-function: cubic-bezier(.2,.7,.4,1); }
+  82%  { transform: translateY(-4px) scale(.97, 1.03); animation-timing-function: ease-in-out; }
+  100% { transform: translateY(0) scale(1, 1); opacity: 1; }
 }
-@keyframes walk-out {
-  from { transform: translateX(0); }
-  to   { transform: translateX(100vw); }
+@keyframes shadow-in {
+  0%   { transform: translateX(-50%) scale(.3); opacity: 0; }
+  40%  { transform: translateX(-50%) scale(.7); opacity: .5; }
+  64%  { transform: translateX(-50%) scale(1.15); opacity: 1; }
+  100% { transform: translateX(-50%) scale(1); opacity: 1; }
 }
-@keyframes bob {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%      { transform: translateY(-7px) rotate(2deg); }
+@keyframes dive-down {
+  0%   { transform: translateY(0) scale(1, 1); animation-timing-function: ease-out; }
+  22%  { transform: translateY(3px) scale(1.12, .86); animation-timing-function: cubic-bezier(.2,.7,.4,1); }
+  50%  { transform: translateY(-24px) scale(.86, 1.16); animation-timing-function: cubic-bezier(.5,0,.8,.4); }
+  76%  { transform: translateY(0) scale(1.3, .5); opacity: 1; animation-timing-function: ease-out; }
+  100% { transform: translateY(0) scale(1.7, .04); opacity: 0; }
 }
-@keyframes step {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px) translateX(3px); }
+@keyframes shadow-out {
+  0%, 50% { transform: translateX(-50%) scale(1); opacity: 1; }
+  76%     { transform: translateX(-50%) scale(1.25); opacity: .8; }
+  100%    { transform: translateX(-50%) scale(.2); opacity: 0; }
 }
 @keyframes sway {
   0%, 100% { transform: rotate(-2.5deg); }
@@ -118,133 +140,241 @@ html, body {
   0%, 94%, 100% { transform: scaleY(1); }
   96%           { transform: scaleY(.08); }
 }
+@keyframes slap {
+  0%   { opacity: 0; transform: translateY(-8px) rotate(-10deg) scale(1.2); animation-timing-function: cubic-bezier(.3,0,.6,1); }
+  45%  { opacity: 1; transform: translateY(0) rotate(.5deg) scale(.96); animation-timing-function: ease-out; }
+  72%  { transform: rotate(-2.4deg) scale(1.015); animation-timing-function: ease-in-out; }
+  100% { opacity: 1; transform: rotate(-1.5deg) scale(1); }
+}
+@keyframes tag-pop {
+  0%   { transform: rotate(-16deg) scale(0); }
+  70%  { transform: rotate(-3deg) scale(1.12); }
+  100% { transform: rotate(-5deg) scale(1); }
+}
+@keyframes peel {
+  from { opacity: 1; transform: rotate(-1.5deg) scale(1); }
+  to   { opacity: 0; transform: translate(10px, 12px) rotate(6deg) scale(.85); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
 
 /* ---------- avatar parts transforms ---------- */
 
-.eyes, .arm, .foot { transform-box: view-box; }
+.eyes, .arm { transform-box: view-box; }
 .eyes { transform-origin: 60px 86px; animation: blink 3.6s infinite; }
 .arm-r { transform-origin: 94px 96px; }
 .arm-l { transform-origin: 26px 96px; }
-.foot-l { transform-origin: 46px 130px; }
-.foot-r { transform-origin: 74px 130px; }
 
-/* ---------- speech bubble ---------- */
+/* ---------- splash ---------- */
+
+/* A zero-size anchor at the buddy's feet; everything inside is positioned from there. */
+#fx {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  pointer-events: none;
+}
+#drop {
+  position: absolute;
+  left: -12px;
+  top: -28px;
+  opacity: 0;
+  transform-origin: 50% 100%;
+  filter: drop-shadow(0 2px 3px rgba(20, 60, 120, .25));
+}
+.ripple {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border: 2px solid var(--splash);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+.spray {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 7px;
+  height: 9px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: linear-gradient(#9fd6ff, #2f8fe0);
+  opacity: 0;
+}
+
+/* ---------- speech bubble (sticker) ---------- */
 
 #bubble-wrap {
   flex-shrink: 1;
   min-width: 0;
-  max-width: 380px;
+  max-width: 350px;
+  margin-bottom: 16px;
   pointer-events: none;
-  align-self: flex-end;
-  margin-bottom: 8px;
 }
 #bubble {
   position: relative;
-  background: rgba(255, 255, 255, .82);
-  backdrop-filter: blur(20px) saturate(1.6);
-  -webkit-backdrop-filter: blur(20px) saturate(1.6);
-  color: #1e293b;
-  border-radius: 14px;
-  padding: 10px 14px;
-  border: 1px solid rgba(255, 255, 255, .6);
-  box-shadow:
-    0 8px 32px rgba(15, 40, 80, .18),
-    0 2px 8px rgba(15, 40, 80, .08),
-    inset 0 1px 0 rgba(255, 255, 255, .5);
+  padding: 5px;
+  border-radius: 26px;
+  background: var(--die-cut);
+  filter:
+    drop-shadow(0 12px 18px rgba(10, 16, 60, .26))
+    drop-shadow(0 2px 2px rgba(10, 16, 60, .16));
+  transform-origin: 100% 80%;
   opacity: 0;
-  transform: scale(.6) translateX(12px);
-  transform-origin: bottom right;
-  transition: opacity .2s ease, transform .28s cubic-bezier(.34, 1.56, .64, 1);
   pointer-events: none;
 }
 #bubble.show {
   opacity: 1;
-  transform: scale(1) translateX(0);
+  transform: rotate(-1.5deg);
   pointer-events: auto;
+  animation: slap .46s both;
 }
+#bubble.peel {
+  animation: peel .22s ease-in both;
+}
+/* Die-cut margin around the tail. The tail itself is .sticker::after, centred on
+   the same point and 10px smaller, so the white border stays an even 5px. */
 #bubble::after {
   content: '';
   position: absolute;
-  right: -7px;
-  bottom: 18px;
-  width: 14px;
-  height: 14px;
-  background: rgba(255, 255, 255, .82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  right: -10px;
+  bottom: 26px;
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--die-cut);
   transform: rotate(45deg);
-  border-radius: 3px;
-  border-right: 1px solid rgba(255, 255, 255, .6);
-  border-top: 1px solid rgba(255, 255, 255, .6);
-  box-shadow: 2px -2px 4px rgba(15, 40, 80, .04);
 }
-#msg {
-  font-size: 13px;
-  line-height: 1.4;
-  font-weight: 700;
-  letter-spacing: -.01em;
+.sticker {
+  position: relative;
+  z-index: 1;
+  padding: 20px 20px 16px;
+  border-radius: 21px;
+  background: var(--pool);
+  color: var(--on-pool);
+}
+.sticker::after {
+  content: '';
+  position: absolute;
+  right: -10px;
+  bottom: 26px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--pool);
+  transform: rotate(45deg);
+}
+#tag {
+  position: absolute;
+  top: -19px;
+  left: 14px;
+  z-index: 2;
+  max-width: 210px;
+  overflow: hidden;
+  padding: 5px 10px 4px;
+  border-radius: 999px;
+  background: var(--bubblegum);
+  box-shadow: 0 0 0 4px var(--die-cut);
+  color: var(--ink);
+  font: 700 10px/1 var(--label);
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: rotate(-5deg);
+}
+#bubble.show #tag {
+  animation: tag-pop .34s .16s both;
+}
+#headline {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+#sub {
+  margin-top: 5px;
+  color: var(--on-pool-soft);
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-wrap: pretty;
 }
 .actions {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
 }
 button {
   font: inherit;
   border: none;
-  border-radius: 8px;
-  padding: 5px 12px;
+  background: none;
   cursor: pointer;
-  font-weight: 700;
-  font-size: 13px;
-  transition: all .15s ease;
+}
+button:focus-visible {
+  outline: 3px solid var(--on-pool);
+  outline-offset: 3px;
 }
 #done {
-  background: #2563eb;
-  color: #fff;
+  padding: 9px 17px 8px;
+  border-radius: 999px;
+  background: var(--fizz);
+  box-shadow: 0 3px 0 var(--fizz-edge);
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+  transition: transform .12s ease, box-shadow .12s ease;
 }
 #done:hover {
-  background: #1d4ed8;
+  transform: translateY(-1px) rotate(-1.5deg);
+  box-shadow: 0 4px 0 var(--fizz-edge);
 }
-#done:active { transform: scale(.97); }
+#done:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--fizz-edge);
+}
 #skip {
-  background: transparent;
-  color: #94a3b8;
-  border: 1.5px solid transparent;
+  padding: 6px 2px;
+  color: var(--on-pool-soft);
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: underline wavy rgba(255, 255, 255, .35);
+  text-underline-offset: 5px;
+  transition: color .15s ease, text-decoration-color .15s ease;
 }
 #skip:hover {
-  background: rgba(148, 163, 184, .08);
-  color: #64748b;
-  border-color: rgba(148, 163, 184, .18);
+  color: var(--on-pool);
+  text-decoration-color: var(--fizz);
 }
 
 /* ---------- dark mode ---------- */
 
-#stage.dark #bubble {
-  background: rgba(30, 41, 59, .88);
-  color: #f1f5f9;
-  border-color: rgba(255, 255, 255, .08);
-  box-shadow:
-    0 8px 32px rgba(0, 0, 0, .35),
-    0 2px 8px rgba(0, 0, 0, .15),
-    inset 0 1px 0 rgba(255, 255, 255, .06);
+#stage.dark {
+  --pool: #161c4f;
+  --die-cut: #2e3780;
+  --on-pool-soft: rgba(226, 231, 255, .72);
+  --fizz-edge: #5f7800;
 }
-#stage.dark #bubble::after {
-  background: rgba(30, 41, 59, .88);
-  border-right-color: rgba(255, 255, 255, .08);
-  border-top-color: rgba(255, 255, 255, .08);
-}
-#stage.dark #done {
-  background: #2563eb;
-}
-#stage.dark #done:hover {
-  background: #1d4ed8;
-}
-#stage.dark #skip {
-  color: #94a3b8;
-}
-#stage.dark #skip:hover {
-  background: rgba(148, 163, 184, .12);
-  color: #cbd5e1;
-  border-color: rgba(148, 163, 184, .15);
+
+/* ---------- reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  #stage.state-enter .spring,
+  #stage.state-enter #shadow,
+  #bubble.show { animation: fade-in .2s both; }
+  #bubble.show #tag { animation: none; }
+  #bubble.peel { animation: fade-out .15s both; }
+  #stage.state-exit .spring,
+  #stage.state-exit #shadow { animation: fade-out .25s both; }
+  #stage.state-waiting .bob,
+  .eyes { animation: none; }
 }

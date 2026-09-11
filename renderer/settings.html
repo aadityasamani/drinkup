@@ -1,101 +1,186 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DrinkUp</title>
+  <link rel="stylesheet" href="theme.css" />
   <link rel="stylesheet" href="settings.css" />
 </head>
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="sidebar-brand">
-        <div class="brand-icon">
-          <svg viewBox="0 0 120 140" width="32" height="37">
-            <defs><linearGradient id="bg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7cc7ff"/><stop offset="1" stop-color="#2f8fe0"/></linearGradient></defs>
-            <path d="M60 6 C52 30 22 58 22 88 a38 38 0 0076 0 C98 58 68 30 60 6Z" fill="url(#bg2)" stroke="#fff" stroke-width="2" opacity=".9"/>
-            <ellipse cx="47" cy="86" rx="7" ry="8" fill="#fff"/><ellipse cx="73" cy="86" rx="7" ry="8" fill="#fff"/>
-            <circle cx="49" cy="87" r="3.5" fill="#173a5e"/><circle cx="75" cy="87" r="3.5" fill="#173a5e"/>
-          </svg>
-        </div>
-        <div class="brand-text">
-          <span class="brand-name">DrinkUp</span>
-          <span class="brand-sub">Stay hydrated</span>
-        </div>
-      </div>
-      <div class="sidebar-footer">
-        <button class="theme-toggle" id="theme-toggle" title="Toggle dark mode">
-          <span class="theme-icon" id="theme-icon">&#9789;</span>
-          <span class="theme-label" id="theme-label">Dark mode</span>
-        </button>
-      </div>
-    </aside>
+  <div class="sheet-container">
+    <main class="settings-sheet">
 
-    <main class="content">
-      <section class="card status-card" id="status-card">
-        <div class="status-row">
-          <div>
-            <div class="status-label" id="status-label">Reminding every 45 minutes</div>
-            <div class="status-sub" id="status-sub">Drippy will swing by soon</div>
+      <div class="sheet-col sheet-col-left">
+        <!-- Section 1: Hero Sticker -->
+        <section class="hero-wrap" aria-label="Current reminder status">
+          <div class="hero-tag-row">
+            <span class="hero-tag" id="hero-tag">DRIPPY SAYS</span>
           </div>
-          <div class="badge badge-active" id="status-badge">
-            <span class="pulse-dot"></span>
-            Active
+          <div class="hero-sticker" id="hero-sticker">
+            <div class="hero-content">
+              <span class="hero-overline" id="hero-overline">next sip in</span>
+              <div class="hero-countdown" id="hero-countdown">-- min</div>
+              <p class="hero-sub" id="hero-sub">every 45 min</p>
+              <div class="hero-actions" id="hero-actions">
+                <button type="button" class="btn-primary-fizz" id="btn-remind-now">remind me now</button>
+                <button type="button" class="btn-outline-pill" id="btn-pause">pause</button>
+              </div>
+            </div>
+            <div class="hero-buddy" id="hero-buddy" aria-hidden="true">
+              <div class="hero-avatar-frame" id="hero-avatar-frame">
+                <svg id="hero-drippy-svg" viewBox="0 0 120 140" width="84" height="98">
+                  <defs>
+                    <linearGradient id="heroBodyGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0" stop-color="#7cc7ff"/>
+                      <stop offset="1" stop-color="#2f8fe0"/>
+                    </linearGradient>
+                  </defs>
+                  <path d="M60 6 C 52 30, 22 58, 22 88 a38 38 0 0 0 76 0 C 98 58, 68 30, 60 6 Z" fill="url(#heroBodyGrad)"/>
+                  <ellipse cx="44" cy="74" rx="9" ry="16" fill="#ffffff" opacity="0.55" transform="rotate(-18 44 74)"/>
+                  <g class="hero-eyes" id="hero-eyes">
+                    <ellipse cx="47" cy="88" rx="8" ry="9" fill="#ffffff"/>
+                    <ellipse cx="73" cy="88" rx="8" ry="9" fill="#ffffff"/>
+                    <circle cx="49" cy="89" r="4.2" fill="#173a5e"/>
+                    <circle cx="75" cy="89" r="4.2" fill="#173a5e"/>
+                    <circle cx="50" cy="85" r="2.5" fill="#ffffff"/>
+                    <circle cx="76" cy="85" r="2.5" fill="#ffffff"/>
+                  </g>
+                  <g class="hero-sleeping-eyes" id="hero-sleeping-eyes" style="display:none;">
+                    <path d="M41 89 q 6 6 12 0" fill="none" stroke="#173a5e" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M67 89 q 6 6 12 0" fill="none" stroke="#173a5e" stroke-width="3" stroke-linecap="round"/>
+                  </g>
+                  <ellipse cx="38" cy="100" rx="5.5" ry="3.5" fill="#ff9db1" opacity="0.75"/>
+                  <ellipse cx="82" cy="100" rx="5.5" ry="3.5" fill="#ff9db1" opacity="0.75"/>
+                  <path d="M52 104 q 8 8 16 0" fill="none" stroke="#173a5e" stroke-width="3.5" stroke-linecap="round"/>
+                </svg>
+                <img id="hero-custom-img" alt="" style="display: none;" />
+                <div class="hero-zzz" id="hero-zzz" style="display: none;">zzz</div>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section class="card">
-        <h2 class="section-title">Remind me every</h2>
-        <div class="interval-row" id="interval-grid"></div>
-        <div class="custom-interval-wrap">
-          <div class="custom-interval-inner">
-            <span class="custom-icon">&#9201;</span>
-            <span class="custom-label">Custom:</span>
-            <input type="number" id="custom-interval-input" min="1" max="120" placeholder="e.g. 20" />
-            <span class="custom-suffix">min</span>
-            <button type="button" class="btn-custom-apply" id="custom-apply-btn">Set</button>
+        <!-- Section 2: HOW OFTEN -->
+        <section class="card-section" aria-labelledby="label-how-often">
+          <h2 class="section-label" id="label-how-often">HOW OFTEN</h2>
+          <div class="card card-padded">
+            <div class="chip-grid" id="interval-chip-grid" role="radiogroup" aria-labelledby="label-how-often">
+              <!-- Chips dynamically generated -->
+            </div>
+
+            <!-- Custom stepper row -->
+            <div class="custom-stepper-row" id="custom-stepper-row" style="display:none;">
+              <div class="stepper-controls">
+                <span class="stepper-prefix">custom →</span>
+                <button type="button" class="btn-step" id="btn-step-minus" aria-label="Decrease minutes">−</button>
+                <input type="number" id="custom-minutes-input" min="1" max="120" value="20" aria-label="Custom minutes" />
+                <button type="button" class="btn-step" id="btn-step-plus" aria-label="Increase minutes">+</button>
+                <span class="stepper-suffix">min</span>
+              </div>
+              <span class="stepper-range-hint">1–120 min</span>
+            </div>
+            <div class="inline-error" id="interval-error" style="display:none;" role="alert"></div>
           </div>
-          <span class="custom-help">1 to 120 minutes</span>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">System</h2>
-        <div class="toggle-row">
-          <div class="toggle-info">
-            <span class="toggle-title">Start with Windows</span>
-            <span class="toggle-sub" id="autostart-sub">Launch DrinkUp in the background on startup</span>
-          </div>
-          <label class="switch" id="autostart-switch">
-            <input type="checkbox" id="autostart-toggle" />
-            <span class="slider"></span>
-          </label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="section-title">Avatar</h2>
-        <div class="avatar-grid" id="avatar-grid"></div>
-        <button class="btn btn-upload" id="upload-btn">
-          <span class="btn-icon">+</span> Upload PNG Avatar
-        </button>
-        <input type="file" id="avatar-file" accept=".png,image/png" hidden />
-      </section>
-
-      <div class="action-stack">
-        <button class="btn btn-primary" id="test-btn">
-          <span class="btn-icon">&#9654;</span> Test reminder now
-        </button>
-        <button class="btn btn-secondary" id="pause-btn">
-          <span class="btn-icon">&#10074;&#10074;</span> Pause reminders
-        </button>
+        </section>
       </div>
 
-      <footer class="foot">
-        v0.1.1
+      <div class="sheet-col sheet-col-right">
+        <!-- Section 3: YOUR BUDDY -->
+        <section class="card-section" aria-labelledby="label-your-buddy">
+        <h2 class="section-label" id="label-your-buddy">YOUR BUDDY</h2>
+        <div class="card card-padded">
+          <div class="avatar-grid" id="avatar-grid" role="radiogroup" aria-labelledby="label-your-buddy">
+            <!-- Avatars dynamically generated -->
+          </div>
+
+          <!-- Inline rename / remove row for custom avatars -->
+          <div class="avatar-custom-actions" id="avatar-custom-actions" style="display: none;">
+            <div class="avatar-actions-default" id="avatar-actions-default">
+              <button type="button" class="btn-text-action" id="btn-rename-avatar">rename</button>
+              <span class="action-divider">·</span>
+              <button type="button" class="btn-text-action" id="btn-remove-avatar">remove</button>
+            </div>
+
+            <!-- Inline rename form -->
+            <div class="avatar-rename-form" id="avatar-rename-form" style="display: none;">
+              <input type="text" id="avatar-rename-input" maxlength="30" placeholder="New name" aria-label="New avatar name" />
+              <button type="button" class="btn-sub-action" id="btn-rename-save">save</button>
+              <button type="button" class="btn-sub-cancel" id="btn-rename-cancel">cancel</button>
+            </div>
+
+            <!-- Inline remove confirm -->
+            <div class="avatar-remove-confirm" id="avatar-remove-confirm" style="display: none;" role="alert">
+              <span id="remove-confirm-text">remove this avatar?</span>
+              <button type="button" class="btn-sub-danger" id="btn-confirm-delete">remove</button>
+              <button type="button" class="btn-sub-cancel" id="btn-cancel-delete">keep</button>
+            </div>
+          </div>
+
+          <div class="inline-error" id="avatar-error" style="display:none;" role="alert"></div>
+          <input type="file" id="avatar-file-input" accept=".png,image/png" hidden />
+        </div>
+      </section>
+
+      <!-- Section 4: PREFERENCES -->
+      <section class="card-section" aria-labelledby="label-preferences">
+        <h2 class="section-label" id="label-preferences">PREFERENCES</h2>
+        <div class="card pref-card">
+          <!-- Theme segmented control -->
+          <div class="pref-row">
+            <span class="pref-label" id="theme-pref-title">theme</span>
+            <div class="segment-group" role="radiogroup" aria-labelledby="theme-pref-title">
+              <label class="segment-btn" id="lbl-theme-light">
+                <input type="radio" name="theme-pref" value="light" id="theme-radio-light" />
+                <span>light</span>
+              </label>
+              <label class="segment-btn" id="lbl-theme-dark">
+                <input type="radio" name="theme-pref" value="dark" id="theme-radio-dark" />
+                <span>dark</span>
+              </label>
+              <label class="segment-btn" id="lbl-theme-system">
+                <input type="radio" name="theme-pref" value="system" id="theme-radio-system" />
+                <span>match windows</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="pref-divider"></div>
+
+          <!-- Splash sound toggle -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <span class="pref-label" id="sound-label">splash sound</span>
+            </div>
+            <label class="switch-lime" aria-labelledby="sound-label">
+              <input type="checkbox" id="sound-toggle" checked />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+
+          <div class="pref-divider"></div>
+
+          <!-- Start with Windows toggle -->
+          <div class="pref-row">
+            <div class="pref-info">
+              <span class="pref-label" id="autostart-label">start with windows</span>
+              <span class="pref-sub" id="autostart-sub"></span>
+            </div>
+            <label class="switch-lime" aria-labelledby="autostart-label">
+              <input type="checkbox" id="autostart-toggle" />
+              <span class="switch-slider"></span>
+            </label>
+          </div>
+        </div>
+      </section>
+      </div>
+
+      <!-- Footer -->
+      <footer class="settings-footer">
+        <span class="footer-version" id="footer-version">DrinkUp</span>
+        <a href="https://github.com/aadityasamani/drinkup" class="footer-link" id="footer-github" target="_blank" rel="noopener noreferrer">github ↗</a>
       </footer>
+
     </main>
   </div>
   <script src="settings.js"></script>

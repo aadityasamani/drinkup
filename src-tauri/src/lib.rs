@@ -1,14 +1,18 @@
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::image::Image;
 use tauri::menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, PredefinedMenuItem};
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
-const WIN_HEIGHT: u32 = 300;
-const WIN_WIDTH: u32 = 520;
+// Reminder overlay size in logical pixels, scaled per monitor so it looks the same at any
+// display scale. Keep in sync with the "main" window in tauri.conf.json.
+const OVERLAY_WIDTH: f64 = 560.0;
+const OVERLAY_HEIGHT: f64 = 340.0;
+// How long the renderer's exit animation runs before the overlay is hidden.
+const EXIT_ANIMATION_MS: u64 = 1800;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Settings {
@@ -18,8 +22,12 @@ struct Settings {
     first_run: bool,
     #[serde(default = "default_avatar")]
     avatar_id: String,
-    #[serde(default)]
-    dark_mode: bool,
+    #[serde(default = "default_theme")]
+    theme: String,
+    #[serde(default = "default_true")]
+    sound: bool,
+    #[serde(default, skip_serializing)]
+    dark_mode: Option<bool>,
 }
 
 fn default_interval() -> u64 {
@@ -31,6 +39,9 @@ fn default_true() -> bool {
 fn default_avatar() -> String {
     "drippy".to_string()
 }
+fn default_theme() -> String {
+    "system".to_string()
+}
 
 impl Default for Settings {
     fn default() -> Self {
@@ -38,7 +49,9 @@ impl Default for Settings {
             interval_min: 45,
             first_run: true,
             avatar_id: default_avatar(),
-            dark_mode: false,
+            theme: default_theme(),
+            sound: true,
+            dark_mode: None,
         }
     }
 }
@@ -47,8 +60,12 @@ struct AppState {
     settings: Mutex<Settings>,
     paused: Mutex<bool>,
     reminder_visible: Mutex<bool>,
+    next_reminder_at: Mutex<Option<SystemTime>>,
     // Bumped every time the schedule changes; pending timers check it before firing.
     generation: AtomicU64,
+    // Bumped every time a reminder is shown; delayed hides and keep-on-top loops left
+    // over from an earlier reminder check it so they leave the current one alone.
+    reminder_session: AtomicU64,
 }
 
 // ---------- autostart (Windows registry) ----------
@@ -117,10 +134,17 @@ fn avatars_dir(app: &AppHandle) -> std::path::PathBuf {
 }
 
 fn load_settings(app: &AppHandle) -> Settings {
-    std::fs::read_to_string(settings_path(app))
+    let mut s: Settings = std::fs::read_to_string(settings_path(app))
         .ok()
-        .and_then(|s| serde_json::from_str(&s).ok())
-        .unwrap_or_default()
+        .and_then(|str| serde_json::from_str(&str).ok())
+        .unwrap_or_default();
+    if let Some(dm) = s.dark_mode {
+        if s.theme == "system" {
+            s.theme = if dm { "dark".to_string() } else { "light".to_string() };
+        }
+        s.dark_mode = None;
+    }
+    s
 }
 
 fn save_settings(app: &AppHandle) {
@@ -215,27 +239,144 @@ fn list_avatars(app: &AppHandle) -> Vec<Avatar> {
     result
 }
 
+// ---------- live status and window theme ----------
+
+#[derive(Serialize, Clone)]
+struct StatusDto {
+    paused: bool,
+    #[serde(rename = "intervalMin")]
+    interval_min: u64,
+    #[serde(rename = "nextReminderAt")]
+    next_reminder_at: Option<u64>,
+    #[serde(rename = "reminderVisible")]
+    reminder_visible: bool,
+    #[serde(rename = "avatarName")]
+    avatar_name: String,
+}
+
+fn current_status(app: &AppHandle) -> StatusDto {
+    let state = app.state::<AppState>();
+    let settings = state.settings.lock().unwrap().clone();
+    let paused = *state.paused.lock().unwrap();
+    let reminder_visible = *state.reminder_visible.lock().unwrap();
+    let next_reminder_at = state.next_reminder_at.lock().unwrap().and_then(|t| {
+        t.duration_since(UNIX_EPOCH).ok().map(|d| d.as_millis() as u64)
+    });
+    let avatar = get_avatar(app, &settings.avatar_id).unwrap_or_else(drippy_avatar);
+    StatusDto {
+        paused,
+        interval_min: settings.interval_min,
+        next_reminder_at,
+        reminder_visible,
+        avatar_name: avatar.name,
+    }
+}
+
+fn emit_status_changed(app: &AppHandle) {
+    let status = current_status(app);
+    let _ = app.emit("status-changed", status);
+}
+
+fn apply_window_theme(app: &AppHandle, theme_str: &str) {
+    let theme_opt = match theme_str {
+        "light" => Some(tauri::Theme::Light),
+        "dark" => Some(tauri::Theme::Dark),
+        _ => None,
+    };
+    if let Some(w) = app.get_webview_window("settings") {
+        let _ = w.set_theme(theme_opt);
+    }
+}
+
 // ---------- reminder flow ----------
 
-// Position the overlay at the bottom-right of the screen, click-through on.
-fn set_walk_mode(w: &tauri::WebviewWindow) {
-    if let Ok(Some(m)) = w.current_monitor() {
-        let size = m.size();
-        let pos = m.position();
-        let win_w = WIN_WIDTH;
-        let x = pos.x + (size.width.saturating_sub(win_w)) as i32;
-        let y = pos.y + (size.height.saturating_sub(WIN_HEIGHT)) as i32;
-        let _ = w.set_position(tauri::PhysicalPosition::new(x, y));
-        let _ = w.set_size(tauri::PhysicalSize::new(win_w, WIN_HEIGHT));
+/// The monitor the user is working on: the one under the mouse, else the primary one.
+fn active_monitor(app: &AppHandle) -> Option<tauri::Monitor> {
+    app.cursor_position()
+        .ok()
+        .and_then(|p| app.monitor_from_point(p.x, p.y).ok().flatten())
+        .or_else(|| app.primary_monitor().ok().flatten())
+}
+
+/// Pin the overlay to the bottom-right corner of the active monitor's work area, so it
+/// sits above the taskbar, at the same logical size on every display scale.
+fn place_overlay(app: &AppHandle, w: &tauri::WebviewWindow) {
+    let Some(m) = active_monitor(app) else {
+        return;
+    };
+    let scale = m.scale_factor();
+    let width = (OVERLAY_WIDTH * scale).round() as u32;
+    let height = (OVERLAY_HEIGHT * scale).round() as u32;
+    let area = m.work_area();
+    let pos = tauri::PhysicalPosition::new(
+        area.position.x + area.size.width.saturating_sub(width) as i32,
+        area.position.y + area.size.height.saturating_sub(height) as i32,
+    );
+    let _ = w.set_position(pos);
+    let _ = w.set_size(tauri::PhysicalSize::new(width, height));
+    // If the move crossed onto a monitor with a different scale, the DPI change resizes
+    // the window and can shift it, so set the position again once the size is final.
+    let _ = w.set_position(pos);
+}
+
+/// Raise the overlay to the top of the always-on-top band without activating it.
+///
+/// `set_always_on_top(true)` can't do this: tao only calls `SetWindowPos(HWND_TOPMOST)`
+/// when that flag changes, so on a window that's already always-on-top it's a no-op and
+/// never lifts the overlay back above windows that came up since it was last shown.
+#[cfg(target_os = "windows")]
+fn raise_overlay(w: &tauri::WebviewWindow) {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
+    };
+    if let Ok(hwnd) = w.hwnd() {
+        unsafe {
+            let _ = SetWindowPos(
+                hwnd,
+                Some(HWND_TOPMOST),
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER,
+            );
+        }
     }
-    let _ = w.set_ignore_cursor_events(true);
+}
+
+#[cfg(not(target_os = "windows"))]
+fn raise_overlay(w: &tauri::WebviewWindow) {
     let _ = w.set_always_on_top(true);
 }
 
-// Just toggle click-through off — window stays in place and always on top.
-fn set_interactive_mode(w: &tauri::WebviewWindow) {
-    let _ = w.set_ignore_cursor_events(false);
-    let _ = w.set_always_on_top(true);
+/// Raise the overlay from the main thread, after any window changes already queued there
+/// (tauri applies `show()` and click-through changes on the main thread too).
+fn raise_overlay_soon(app: &AppHandle) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if let Some(w) = handle.get_webview_window("main") {
+            raise_overlay(&w);
+        }
+    });
+}
+
+/// Keep re-raising the overlay while this reminder is on screen, so an always-on-top app,
+/// a taskbar flyout or anything else that comes up afterwards doesn't bury it.
+fn keep_on_top(app: &AppHandle, session: u64) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        // A few quick passes while the show and click-through changes land, then a slow heartbeat.
+        for delay in [60, 250, 800].into_iter().chain(std::iter::repeat(1000)) {
+            tokio::time::sleep(Duration::from_millis(delay)).await;
+            let state = app.state::<AppState>();
+            if state.reminder_session.load(Ordering::SeqCst) != session
+                || !*state.reminder_visible.lock().unwrap()
+            {
+                break;
+            }
+            raise_overlay_soon(&app);
+        }
+    });
 }
 
 fn show_reminder(app: &AppHandle, demo: bool) {
@@ -247,6 +388,10 @@ fn show_reminder(app: &AppHandle, demo: bool) {
         }
         *visible = true;
     }
+    *state.next_reminder_at.lock().unwrap() = None;
+    emit_status_changed(app);
+
+    let session = state.reminder_session.fetch_add(1, Ordering::SeqCst) + 1;
     let settings = state.settings.lock().unwrap().clone();
     let avatar = get_avatar(app, &settings.avatar_id).unwrap_or_else(drippy_avatar);
 
@@ -263,12 +408,26 @@ fn show_reminder(app: &AppHandle, demo: bool) {
         avatar: AvatarInfo,
         #[serde(rename = "darkMode")]
         dark_mode: bool,
+        theme: String,
+        sound: bool,
     }
     let url = avatar_data_uri(app, &avatar);
+    let is_dark = match settings.theme.as_str() {
+        "dark" => true,
+        "light" => false,
+        _ => {
+            app.get_webview_window("settings")
+                .and_then(|w| w.theme().ok())
+                .map(|t| matches!(t, tauri::Theme::Dark))
+                .unwrap_or(false)
+        }
+    };
     let payload = Payload {
         demo,
         interval_min: settings.interval_min,
-        dark_mode: settings.dark_mode,
+        dark_mode: is_dark,
+        theme: settings.theme.clone(),
+        sound: settings.sound,
         avatar: AvatarInfo {
             name: avatar.name,
             url,
@@ -276,19 +435,16 @@ fn show_reminder(app: &AppHandle, demo: bool) {
     };
 
     if let Some(w) = app.get_webview_window("main") {
-        // 1. Position the window off-screen correctly.
-        set_walk_mode(&w);
-        // 2. Set always on top before showing.
-        let _ = w.set_always_on_top(true);
-        // 3. Show the window so it is visible when the event fires.
+        place_overlay(app, &w);
+        let _ = w.set_ignore_cursor_events(true);
         let _ = w.show();
-        // 4. Re-assert always_on_top after show so Windows puts it on topmost Z-order.
-        let _ = w.set_always_on_top(true);
     }
+    raise_overlay_soon(app);
+    keep_on_top(app, session);
 
-    // 5. Give the OS one frame (~17 ms) to composite the window at its new
-    //    position, then fire the event so JS animates into an already-visible,
-    //    correctly-placed window.
+    // Give the OS one frame (~17 ms) to composite the window at its new
+    // position, then fire the event so JS animates into an already-visible,
+    // correctly-placed window.
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(Duration::from_millis(20)).await;
@@ -305,10 +461,17 @@ fn close_reminder(app: &AppHandle) {
         }
         *visible = false;
     }
-    // Give the exit animation (happy hop + walk off) time to play before hiding.
+    emit_status_changed(app);
+
+    // Let the exit animation play before hiding. Skip the hide if another reminder has
+    // been shown in the meantime, or it would vanish as soon as it appears.
+    let session = state.reminder_session.load(Ordering::SeqCst);
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(3900)).await;
+        tokio::time::sleep(Duration::from_millis(EXIT_ANIMATION_MS)).await;
+        if app2.state::<AppState>().reminder_session.load(Ordering::SeqCst) != session {
+            return;
+        }
         if let Some(w) = app2.get_webview_window("main") {
             let _ = w.set_ignore_cursor_events(true);
             let _ = w.hide();
@@ -320,15 +483,23 @@ fn close_reminder(app: &AppHandle) {
 fn cancel_pending(app: &AppHandle) {
     let state = app.state::<AppState>();
     state.generation.fetch_add(1, Ordering::SeqCst);
+    *state.next_reminder_at.lock().unwrap() = None;
+    emit_status_changed(app);
 }
 
 fn schedule(app: &AppHandle) {
     let state = app.state::<AppState>();
     let gen = state.generation.fetch_add(1, Ordering::SeqCst) + 1;
     if *state.paused.lock().unwrap() {
+        *state.next_reminder_at.lock().unwrap() = None;
+        emit_status_changed(app);
         return;
     }
     let interval = state.settings.lock().unwrap().interval_min;
+    let next = SystemTime::now() + Duration::from_secs(interval * 60);
+    *state.next_reminder_at.lock().unwrap() = Some(next);
+    emit_status_changed(app);
+
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(Duration::from_secs(interval * 60)).await;
@@ -402,6 +573,14 @@ fn open_settings_window(app: &AppHandle) {
     let Some(w) = app.get_webview_window("settings") else {
         return;
     };
+    let theme = {
+        let state = app.state::<AppState>();
+        let t = state.settings.lock().unwrap().theme.clone();
+        t
+    };
+    apply_window_theme(app, &theme);
+    emit_status_changed(app);
+
     let _ = w.unminimize();
     let _ = w.show();
     let _ = w.set_focus();
@@ -430,6 +609,7 @@ fn toggle_pause_state(app: &AppHandle) -> bool {
         schedule(app);
     }
     refresh_menu(app);
+    emit_status_changed(app);
     now_paused
 }
 
@@ -457,12 +637,10 @@ fn reminder_result(app: AppHandle, result: String) {
 #[tauri::command]
 fn set_interactive(app: AppHandle, interactive: bool) {
     if let Some(w) = app.get_webview_window("main") {
-        if interactive {
-            set_interactive_mode(&w);
-        } else {
-            set_walk_mode(&w);
-        }
+        let _ = w.set_ignore_cursor_events(!interactive);
     }
+    // tao re-shows the window whenever it restyles it, so put our z-order back on top.
+    raise_overlay_soon(&app);
 }
 
 // ---------- settings commands ----------
@@ -476,9 +654,12 @@ struct SettingsDto {
     paused: bool,
     #[serde(rename = "darkMode")]
     dark_mode: bool,
+    theme: String,
+    sound: bool,
     autostart: bool,
     #[serde(rename = "isDev")]
     is_dev: bool,
+    version: String,
 }
 
 #[tauri::command]
@@ -494,17 +675,40 @@ fn close_settings(app: AppHandle) {
 }
 
 #[tauri::command]
+fn get_app_version(app: AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+#[tauri::command]
+fn get_status(app: AppHandle) -> StatusDto {
+    current_status(&app)
+}
+
+#[tauri::command]
 fn get_settings(app: AppHandle) -> SettingsDto {
     let state = app.state::<AppState>();
     let s = state.settings.lock().unwrap().clone();
     let paused = *state.paused.lock().unwrap();
+    let is_dark = match s.theme.as_str() {
+        "dark" => true,
+        "light" => false,
+        _ => {
+            app.get_webview_window("settings")
+                .and_then(|w| w.theme().ok())
+                .map(|t| matches!(t, tauri::Theme::Dark))
+                .unwrap_or(false)
+        }
+    };
     SettingsDto {
         interval_min: s.interval_min,
         avatar_id: s.avatar_id,
         paused,
-        dark_mode: s.dark_mode,
+        dark_mode: is_dark,
+        theme: s.theme,
+        sound: s.sound,
         autostart: is_autostart_enabled(),
         is_dev: cfg!(debug_assertions),
+        version: app.package_info().version.to_string(),
     }
 }
 
@@ -518,6 +722,60 @@ fn set_interval(app: AppHandle, minutes: u64) {
     save_settings(&app);
     refresh_menu(&app);
     schedule(&app);
+    emit_status_changed(&app);
+}
+
+#[tauri::command]
+fn set_theme(app: AppHandle, theme: String) {
+    {
+        let state = app.state::<AppState>();
+        state.settings.lock().unwrap().theme = theme.clone();
+    }
+    save_settings(&app);
+    apply_window_theme(&app, &theme);
+    let is_dark = match theme.as_str() {
+        "dark" => true,
+        "light" => false,
+        _ => {
+            app.get_webview_window("settings")
+                .and_then(|w| w.theme().ok())
+                .map(|t| matches!(t, tauri::Theme::Dark))
+                .unwrap_or(false)
+        }
+    };
+    let _ = app.emit("theme-changed", theme);
+    let _ = app.emit("dark-mode-changed", is_dark);
+}
+
+#[tauri::command]
+fn set_dark_mode(app: AppHandle, dark: bool) {
+    set_theme(app, if dark { "dark".to_string() } else { "light".to_string() });
+}
+
+#[tauri::command]
+fn set_sound(app: AppHandle, sound: bool) {
+    {
+        let state = app.state::<AppState>();
+        state.settings.lock().unwrap().sound = sound;
+    }
+    save_settings(&app);
+}
+
+#[tauri::command]
+fn open_url(url: String) {
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        let _ = std::process::Command::new("cmd")
+            .args(["/c", "start", "", &url])
+            .creation_flags(CREATE_NO_WINDOW)
+            .spawn();
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        let _ = url;
+    }
 }
 
 #[tauri::command]
@@ -579,6 +837,7 @@ fn set_avatar(app: AppHandle, avatar_id: String) -> Result<(), String> {
         settings.avatar_id = avatar_id;
     }
     save_settings(&app);
+    emit_status_changed(&app);
     Ok(())
 }
 
@@ -616,6 +875,7 @@ fn upload_avatar(app: AppHandle, name: String, data: String) -> Result<AvatarDto
         file: Some(file_name),
     };
     save_avatar(&app, &avatar)?;
+    emit_status_changed(&app);
     Ok(to_dto(&app, &avatar))
 }
 
@@ -641,6 +901,7 @@ fn delete_avatar(app: AppHandle, avatar_id: String) -> Result<(), String> {
         }
     }
     save_settings(&app);
+    emit_status_changed(&app);
     Ok(())
 }
 
@@ -661,17 +922,8 @@ fn rename_avatar(app: AppHandle, avatar_id: String, name: String) -> Result<(), 
     avatar.name = name;
     let json = serde_json::to_string_pretty(&avatar).map_err(|e| e.to_string())?;
     std::fs::write(path, json).map_err(|e| format!("Could not save: {e}"))?;
+    emit_status_changed(&app);
     Ok(())
-}
-
-#[tauri::command]
-fn set_dark_mode(app: AppHandle, dark: bool) {
-    {
-        let state = app.state::<AppState>();
-        state.settings.lock().unwrap().dark_mode = dark;
-    }
-    save_settings(&app);
-    let _ = app.emit("theme-changed", dark);
 }
 
 // ---------- boot ----------
@@ -685,21 +937,24 @@ pub fn run() {
             settings: Mutex::new(Settings::default()),
             paused: Mutex::new(false),
             reminder_visible: Mutex::new(false),
+            next_reminder_at: Mutex::new(None),
             generation: AtomicU64::new(0),
+            reminder_session: AtomicU64::new(0),
         })
         .setup(|app| {
             let handle = app.handle().clone();
 
             // Load persisted settings.
             let loaded = load_settings(&handle);
+            apply_window_theme(&handle, &loaded.theme);
             {
                 let state = app.state::<AppState>();
                 *state.settings.lock().unwrap() = loaded;
             }
 
-            // Size and hide the overlay window.
+            // Hide the overlay until the first reminder; it's placed each time it shows.
             if let Some(w) = app.get_webview_window("main") {
-                set_walk_mode(&w);
+                let _ = w.set_ignore_cursor_events(true);
                 let _ = w.hide();
             }
 
@@ -770,6 +1025,7 @@ pub fn run() {
             open_settings,
             close_settings,
             get_settings,
+            get_status,
             set_interval,
             get_autostart,
             set_autostart,
@@ -781,7 +1037,11 @@ pub fn run() {
             upload_avatar,
             delete_avatar,
             rename_avatar,
-            set_dark_mode
+            set_theme,
+            set_sound,
+            set_dark_mode,
+            open_url,
+            get_app_version
         ])
         // Intercept close requests on all windows: hide instead of destroy.
         // The only way to truly quit is via the tray "Quit" menu item.
