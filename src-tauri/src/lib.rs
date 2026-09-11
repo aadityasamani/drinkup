@@ -7,8 +7,12 @@ use tauri::menu::{Menu, MenuBuilder, MenuEvent, MenuItemBuilder, PredefinedMenuI
 use tauri::tray::{TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager};
 
-const WIN_HEIGHT: u32 = 300;
-const WIN_WIDTH: u32 = 520;
+// Reminder overlay size in logical pixels, scaled per monitor so it looks the same at any
+// display scale. Keep in sync with the "main" window in tauri.conf.json.
+const OVERLAY_WIDTH: f64 = 560.0;
+const OVERLAY_HEIGHT: f64 = 340.0;
+// How long the renderer's exit animation runs before the overlay is hidden.
+const EXIT_ANIMATION_MS: u64 = 1800;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct Settings {
@@ -49,6 +53,9 @@ struct AppState {
     reminder_visible: Mutex<bool>,
     // Bumped every time the schedule changes; pending timers check it before firing.
     generation: AtomicU64,
+    // Bumped every time a reminder is shown; delayed hides and keep-on-top loops left
+    // over from an earlier reminder check it so they leave the current one alone.
+    reminder_session: AtomicU64,
 }
 
 // ---------- autostart (Windows registry) ----------
@@ -217,25 +224,93 @@ fn list_avatars(app: &AppHandle) -> Vec<Avatar> {
 
 // ---------- reminder flow ----------
 
-// Position the overlay at the bottom-right of the screen, click-through on.
-fn set_walk_mode(w: &tauri::WebviewWindow) {
-    if let Ok(Some(m)) = w.current_monitor() {
-        let size = m.size();
-        let pos = m.position();
-        let win_w = WIN_WIDTH;
-        let x = pos.x + (size.width.saturating_sub(win_w)) as i32;
-        let y = pos.y + (size.height.saturating_sub(WIN_HEIGHT)) as i32;
-        let _ = w.set_position(tauri::PhysicalPosition::new(x, y));
-        let _ = w.set_size(tauri::PhysicalSize::new(win_w, WIN_HEIGHT));
+/// The monitor the user is working on: the one under the mouse, else the primary one.
+fn active_monitor(app: &AppHandle) -> Option<tauri::Monitor> {
+    app.cursor_position()
+        .ok()
+        .and_then(|p| app.monitor_from_point(p.x, p.y).ok().flatten())
+        .or_else(|| app.primary_monitor().ok().flatten())
+}
+
+/// Pin the overlay to the bottom-right corner of the active monitor's work area, so it
+/// sits above the taskbar, at the same logical size on every display scale.
+fn place_overlay(app: &AppHandle, w: &tauri::WebviewWindow) {
+    let Some(m) = active_monitor(app) else {
+        return;
+    };
+    let scale = m.scale_factor();
+    let width = (OVERLAY_WIDTH * scale).round() as u32;
+    let height = (OVERLAY_HEIGHT * scale).round() as u32;
+    let area = m.work_area();
+    let pos = tauri::PhysicalPosition::new(
+        area.position.x + area.size.width.saturating_sub(width) as i32,
+        area.position.y + area.size.height.saturating_sub(height) as i32,
+    );
+    let _ = w.set_position(pos);
+    let _ = w.set_size(tauri::PhysicalSize::new(width, height));
+    // If the move crossed onto a monitor with a different scale, the DPI change resizes
+    // the window and can shift it, so set the position again once the size is final.
+    let _ = w.set_position(pos);
+}
+
+/// Raise the overlay to the top of the always-on-top band without activating it.
+///
+/// `set_always_on_top(true)` can't do this: tao only calls `SetWindowPos(HWND_TOPMOST)`
+/// when that flag changes, so on a window that's already always-on-top it's a no-op and
+/// never lifts the overlay back above windows that came up since it was last shown.
+#[cfg(target_os = "windows")]
+fn raise_overlay(w: &tauri::WebviewWindow) {
+    use windows::Win32::UI::WindowsAndMessaging::{
+        SetWindowPos, HWND_TOPMOST, SWP_NOACTIVATE, SWP_NOMOVE, SWP_NOOWNERZORDER, SWP_NOSIZE,
+    };
+    if let Ok(hwnd) = w.hwnd() {
+        unsafe {
+            let _ = SetWindowPos(
+                hwnd,
+                Some(HWND_TOPMOST),
+                0,
+                0,
+                0,
+                0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOOWNERZORDER,
+            );
+        }
     }
-    let _ = w.set_ignore_cursor_events(true);
+}
+
+#[cfg(not(target_os = "windows"))]
+fn raise_overlay(w: &tauri::WebviewWindow) {
     let _ = w.set_always_on_top(true);
 }
 
-// Just toggle click-through off — window stays in place and always on top.
-fn set_interactive_mode(w: &tauri::WebviewWindow) {
-    let _ = w.set_ignore_cursor_events(false);
-    let _ = w.set_always_on_top(true);
+/// Raise the overlay from the main thread, after any window changes already queued there
+/// (tauri applies `show()` and click-through changes on the main thread too).
+fn raise_overlay_soon(app: &AppHandle) {
+    let handle = app.clone();
+    let _ = app.run_on_main_thread(move || {
+        if let Some(w) = handle.get_webview_window("main") {
+            raise_overlay(&w);
+        }
+    });
+}
+
+/// Keep re-raising the overlay while this reminder is on screen, so an always-on-top app,
+/// a taskbar flyout or anything else that comes up afterwards doesn't bury it.
+fn keep_on_top(app: &AppHandle, session: u64) {
+    let app = app.clone();
+    tauri::async_runtime::spawn(async move {
+        // A few quick passes while the show and click-through changes land, then a slow heartbeat.
+        for delay in [60, 250, 800].into_iter().chain(std::iter::repeat(1000)) {
+            tokio::time::sleep(Duration::from_millis(delay)).await;
+            let state = app.state::<AppState>();
+            if state.reminder_session.load(Ordering::SeqCst) != session
+                || !*state.reminder_visible.lock().unwrap()
+            {
+                break;
+            }
+            raise_overlay_soon(&app);
+        }
+    });
 }
 
 fn show_reminder(app: &AppHandle, demo: bool) {
@@ -247,6 +322,7 @@ fn show_reminder(app: &AppHandle, demo: bool) {
         }
         *visible = true;
     }
+    let session = state.reminder_session.fetch_add(1, Ordering::SeqCst) + 1;
     let settings = state.settings.lock().unwrap().clone();
     let avatar = get_avatar(app, &settings.avatar_id).unwrap_or_else(drippy_avatar);
 
@@ -276,19 +352,16 @@ fn show_reminder(app: &AppHandle, demo: bool) {
     };
 
     if let Some(w) = app.get_webview_window("main") {
-        // 1. Position the window off-screen correctly.
-        set_walk_mode(&w);
-        // 2. Set always on top before showing.
-        let _ = w.set_always_on_top(true);
-        // 3. Show the window so it is visible when the event fires.
+        place_overlay(app, &w);
+        let _ = w.set_ignore_cursor_events(true);
         let _ = w.show();
-        // 4. Re-assert always_on_top after show so Windows puts it on topmost Z-order.
-        let _ = w.set_always_on_top(true);
     }
+    raise_overlay_soon(app);
+    keep_on_top(app, session);
 
-    // 5. Give the OS one frame (~17 ms) to composite the window at its new
-    //    position, then fire the event so JS animates into an already-visible,
-    //    correctly-placed window.
+    // Give the OS one frame (~17 ms) to composite the window at its new
+    // position, then fire the event so JS animates into an already-visible,
+    // correctly-placed window.
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
         tokio::time::sleep(Duration::from_millis(20)).await;
@@ -305,10 +378,15 @@ fn close_reminder(app: &AppHandle) {
         }
         *visible = false;
     }
-    // Give the exit animation (happy hop + walk off) time to play before hiding.
+    // Let the exit animation play before hiding. Skip the hide if another reminder has
+    // been shown in the meantime, or it would vanish as soon as it appears.
+    let session = state.reminder_session.load(Ordering::SeqCst);
     let app2 = app.clone();
     tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(Duration::from_millis(3900)).await;
+        tokio::time::sleep(Duration::from_millis(EXIT_ANIMATION_MS)).await;
+        if app2.state::<AppState>().reminder_session.load(Ordering::SeqCst) != session {
+            return;
+        }
         if let Some(w) = app2.get_webview_window("main") {
             let _ = w.set_ignore_cursor_events(true);
             let _ = w.hide();
@@ -457,12 +535,10 @@ fn reminder_result(app: AppHandle, result: String) {
 #[tauri::command]
 fn set_interactive(app: AppHandle, interactive: bool) {
     if let Some(w) = app.get_webview_window("main") {
-        if interactive {
-            set_interactive_mode(&w);
-        } else {
-            set_walk_mode(&w);
-        }
+        let _ = w.set_ignore_cursor_events(!interactive);
     }
+    // tao re-shows the window whenever it restyles it, so put our z-order back on top.
+    raise_overlay_soon(&app);
 }
 
 // ---------- settings commands ----------
@@ -686,6 +762,7 @@ pub fn run() {
             paused: Mutex::new(false),
             reminder_visible: Mutex::new(false),
             generation: AtomicU64::new(0),
+            reminder_session: AtomicU64::new(0),
         })
         .setup(|app| {
             let handle = app.handle().clone();
@@ -697,9 +774,9 @@ pub fn run() {
                 *state.settings.lock().unwrap() = loaded;
             }
 
-            // Size and hide the overlay window.
+            // Hide the overlay until the first reminder; it's placed each time it shows.
             if let Some(w) = app.get_webview_window("main") {
-                set_walk_mode(&w);
+                let _ = w.set_ignore_cursor_events(true);
                 let _ = w.hide();
             }
 
