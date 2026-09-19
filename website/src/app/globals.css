@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  /* Base Light Theme Tokens */
+  --pool: #2a4df5;           /* hero sticker face, reminder face */
+  --die-cut: #ffffff;        /* sticker border */
+  --select: #2a4df5;         /* picked chip, theme segment, avatar ring */
+  --fizz: #d8ff3c;           /* primary button, switch on */
+  --fizz-edge: #0f1330;      /* keycap edge under primary buttons */
+  --bubblegum: #ff7ac6;      /* name tag only */
+  --sheet: #eef1fb;          /* window background */
+  --sheet-dot: #d5dbf0;      /* dot grid on the sheet */
+  --card: #ffffff;           /* section cards */
+  --line: #dce1f3;           /* borders and dividers */
+  --text: #0f1330;           /* primary text */
+  --muted: #5a6190;          /* secondary text */
+  --ink: #0f1330;            /* text on lime and pink */
+  --on-pool: #ffffff;
+  --on-pool-soft: rgba(255, 255, 255, 0.8);
+  --splash: rgba(47, 143, 224, 0.85);
+  --shadow-sheet: rgba(15, 19, 48, 0.08);
+}
+
+html {
+  color-scheme: light;
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--text);
+  background-color: var(--sheet);
+  background-image: radial-gradient(var(--sheet-dot) 1.5px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-attachment: fixed;
+  font-family: var(--font-display), "Bricolage Grotesque", "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--fizz);
+  color: var(--ink);
+}
+
+/* Sticker die-cut outer shell utility */
+.die-cut-shell {
+  padding: 4px;
+  border-radius: 24px;
+  background-color: var(--die-cut);
+  box-shadow: 0 10px 24px var(--shadow-sheet), 0 2px 4px rgba(10, 16, 60, 0.08);
+}
