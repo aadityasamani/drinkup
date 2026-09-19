@@ -1,5 +1,8 @@
 # Node
 node_modules/
+website/node_modules/
+website/.next/
+website/out/
 
 # Rust / Tauri build artifacts (can be GBs — never commit these)
 src-tauri/target/

@@ -8,6 +8,8 @@
   "scripts": {
     "dev": "tauri dev",
     "build": "tauri build",
+    "website:dev": "npm run dev --prefix website",
+    "website:build": "npm run build --prefix website",
     "icon": "node scripts/make-icon.js && node scripts/make-ico.js"
   },
   "devDependencies": {
