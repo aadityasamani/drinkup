@@ -37,7 +37,7 @@ const spaceMono = localFont({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://drinkup.vercel.app"),
+  metadataBase: new URL("https://getdrinkup.vercel.app"),
   title: "DrinkUp — A tiny water reminder that actually gets out of your way",
   description:
     "DrinkUp lives in your Windows tray, splashes a reminder onto your screen when it's time to sip, and dives back out. No accounts, no subscriptions, no nagging popups — just one tiny .exe.",
@@ -57,13 +57,13 @@ export const metadata: Metadata = {
     title: "DrinkUp — A tiny water reminder that actually gets out of your way",
     description:
       "Lives in your Windows tray, splashes a reminder onto your screen when it's time to sip, and dives back out. Free, open source, ~2 MB.",
-    url: "https://github.com/aadityasamani/drinkup",
+    url: "https://getdrinkup.vercel.app",
     siteName: "DrinkUp",
     images: [
       {
-        url: "/images/reminder-light.png",
-        width: 600,
-        height: 400,
+        url: "https://getdrinkup.vercel.app/images/reminder-light.png",
+        width: 910,
+        height: 556,
         alt: "DrinkUp reminder notification preview",
       },
     ],
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     title: "DrinkUp — A tiny water reminder that actually gets out of your way",
     description:
       "Lives in your Windows tray, splashes a reminder onto your screen when it's time to sip, and dives back out. Free, open source, ~2 MB.",
-    images: ["/images/reminder-light.png"],
+    images: ["https://getdrinkup.vercel.app/images/reminder-light.png"],
   },
 };
 
